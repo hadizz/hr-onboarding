@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "hr-onboarding": {
+      "command": "python",
+      "args": ["mcp-server/server.py"],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "OPENAI_API_KEY": "${env:OPENAI_API_KEY}"
+      }
+    }
+  }
+}

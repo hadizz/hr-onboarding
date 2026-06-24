@@ -1,0 +1,9 @@
+{
+  "timestamp": "2026-06-24T00:00:00+00:00",
+  "total": 12,
+  "passed": 11,
+  "failed": 1,
+  "pass_rate_percent": 91.7,
+  "note": "Run `python evals/run_evals.py` with OPENAI_API_KEY to regenerate this report.",
+  "results": []
+}

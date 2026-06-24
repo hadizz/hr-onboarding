@@ -1,0 +1,78 @@
+- id: remote_policy
+  input: "Can I work from home on Fridays?"
+  expect:
+    cites_source: employee-handbook.md
+    contains: ["remote", "Friday"]
+    tools_called: [search_handbook_tool]
+
+- id: pto_policy
+  input: "How many PTO days do I get per year?"
+  expect:
+    cites_source: employee-handbook.md
+    contains: ["25"]
+    tools_called: [search_handbook_tool]
+
+- id: proactive_tasks
+  input: "I just started as a software engineer today. What should I do this week?"
+  expect:
+    tools_called: [create_onboarding_task_tool]
+    min_tasks_created: 3
+
+- id: benefits_deadline
+  input: "When do I need to enroll in health insurance?"
+  expect:
+    cites_source: benefits-guide.md
+    contains: ["30"]
+    tools_called: [search_handbook_tool]
+
+- id: vpn_setup
+  input: "How do I set up VPN on my first day?"
+  expect:
+    cites_source: it-setup.md
+    contains: ["VPN"]
+    tools_called: [search_handbook_tool]
+
+- id: slack_channels
+  input: "Which Slack channels should I join?"
+  expect:
+    cites_source: it-setup.md
+    contains: ["slack"]
+    tools_called: [search_handbook_tool]
+
+- id: wellness_stipend
+  input: "Is there a wellness stipend?"
+  expect:
+    cites_source: benefits-guide.md
+    contains: ["50"]
+    tools_called: [search_handbook_tool]
+
+- id: security_requirements
+  input: "What security setup is required in my first 48 hours?"
+  expect:
+    cites_source: it-setup.md
+    contains: ["2FA"]
+    tools_called: [search_handbook_tool]
+
+- id: schedule_checkin
+  input: "Please schedule a check-in with my manager on day 7 to discuss goals."
+  expect:
+    tools_called: [schedule_checkin_tool]
+
+- id: list_tasks
+  input: "What onboarding tasks do I have so far?"
+  expect:
+    tools_called: [list_onboarding_tasks_tool]
+
+- id: code_of_conduct
+  input: "What is the company policy on harassment?"
+  expect:
+    cites_source: employee-handbook.md
+    contains: ["harassment"]
+    tools_called: [search_handbook_tool]
+
+- id: parental_leave
+  input: "How much parental leave do primary caregivers get?"
+  expect:
+    cites_source: benefits-guide.md
+    contains: ["16"]
+    tools_called: [search_handbook_tool]
