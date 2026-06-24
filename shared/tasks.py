@@ -92,6 +92,30 @@ def get_onboarding_status(employee_id: str) -> dict[str, Any]:
     }
 
 
+def list_checkins(employee_id: str | None = None) -> list[dict[str, Any]]:
+    ensure_db()
+    with get_connection() as conn:
+        if employee_id:
+            rows = conn.execute(
+                """
+                SELECT id, employee_id, day, topic, scheduled_at
+                FROM checkins
+                WHERE employee_id = ?
+                ORDER BY day ASC, scheduled_at DESC, id ASC
+                """,
+                (employee_id,),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                """
+                SELECT id, employee_id, day, topic, scheduled_at
+                FROM checkins
+                ORDER BY scheduled_at DESC, day ASC, id ASC
+                """
+            ).fetchall()
+    return [dict(row) for row in rows]
+
+
 def schedule_checkin(employee_id: str, day: int, topic: str) -> dict[str, Any]:
     ensure_db()
     with get_connection() as conn:

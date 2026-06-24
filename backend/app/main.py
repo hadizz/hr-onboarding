@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 
 from agent.onboarding_agent import run_agent, stream_agent
 from shared.config import DEFAULT_EMPLOYEE_ID
-from shared.tasks import complete_task, get_onboarding_status, reset_employee_data
+from shared.tasks import complete_task, get_onboarding_status, list_checkins, reset_employee_data
 
 
 @asynccontextmanager
@@ -98,6 +98,11 @@ def mark_task_complete(employee_id: str, task_id: int, body: CompleteTaskRequest
 def reset_onboarding(employee_id: str):
     reset_employee_data(employee_id)
     return {"status": "reset", "employee_id": employee_id}
+
+
+@app.get("/api/admin/checkins")
+def admin_checkins(employee_id: str | None = None):
+    return {"checkins": list_checkins(employee_id)}
 
 
 @app.get("/api/employee/demo")

@@ -31,6 +31,14 @@ export interface DemoEmployee {
   company: string;
 }
 
+export interface Checkin {
+  id: number;
+  employee_id: string;
+  day: number;
+  topic: string;
+  scheduled_at: string;
+}
+
 export async function fetchDemoEmployee(): Promise<DemoEmployee> {
   const res = await fetch(`${API_BASE}/api/employee/demo`);
   return res.json();
@@ -51,6 +59,14 @@ export async function completeTask(employeeId: string, taskId: number): Promise<
 
 export async function resetOnboarding(employeeId: string): Promise<void> {
   await fetch(`${API_BASE}/api/onboarding/${employeeId}/reset`, { method: 'POST' });
+}
+
+export async function fetchCheckins(employeeId?: string): Promise<Checkin[]> {
+  const params = employeeId ? `?employee_id=${encodeURIComponent(employeeId)}` : '';
+  const res = await fetch(`${API_BASE}/api/admin/checkins${params}`);
+  if (!res.ok) throw new Error('Failed to fetch check-ins');
+  const data = await res.json();
+  return data.checkins;
 }
 
 export async function sendChat(
