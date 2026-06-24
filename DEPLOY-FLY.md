@@ -26,6 +26,8 @@ Click **Deploy**.
 
 ### After first deploy — set API key (required)
 
+**The app will not respond to chat without this.** `/health` works without it, but RAG indexing is much faster with OpenAI embeddings.
+
 In [Fly.io dashboard](https://fly.io/dashboard) → your app **hr-onboarding** → **Secrets**:
 
 ```
@@ -125,6 +127,7 @@ fly deploy
 |---------|-----|
 | Build fails: `COPY shared` not found | Working directory must be **repo root**, not `backend` |
 | `OPENAI_API_KEY is required` | Set secret in Fly dashboard, then redeploy |
+| `/health` times out | Redeploy latest code (startup no longer blocks on Chroma). Set `OPENAI_API_KEY` secret. First request may take ~10s (cold start). |
 | App sleeps (cold start) | Free tier stops machines when idle — first request takes ~5–10s |
 | Frontend can't reach API | Set `VITE_API_URL` to `https://hr-onboarding.fly.dev` before building frontend |
 | Volume mount error on first deploy | Create volume first: `fly volumes create hr_onboarding_data --region arn --size 1` |

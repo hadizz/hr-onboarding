@@ -10,7 +10,13 @@ primary_region = "arn"
   auto_stop_machines = "stop"
   auto_start_machines = true
   min_machines_running = 0
-  processes = ["app"]
+
+  [[http_service.checks]]
+    grace_period = "120s"
+    interval = "30s"
+    method = "GET"
+    path = "/health"
+    timeout = "10s"
 
 [[vm]]
   memory = "1gb"

@@ -9,6 +9,8 @@ COPY shared /app/shared
 COPY seed-data /app/seed-data
 COPY backend /app/backend
 
+RUN mkdir -p /app/data
+
 ENV PYTHONPATH=/app:/app/backend
 
 EXPOSE 8000

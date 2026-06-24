@@ -12,13 +12,12 @@ from pydantic import BaseModel, Field
 
 from agent.onboarding_agent import run_agent, stream_agent
 from shared.config import DEFAULT_EMPLOYEE_ID
-from shared.rag import ensure_index
 from shared.tasks import complete_task, get_onboarding_status, reset_employee_data
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    ensure_index()
+    # RAG index builds lazily on first search — keeps /health fast on cold start.
     yield
 
 
