@@ -1,15 +1,26 @@
-app = "onboardai-api"
-primary_region = "arn"
+# fly.toml app configuration file generated for hr-onboarding on 2026-06-24T20:47:08Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'hr-onboarding'
+primary_region = 'arn'
 
 [build]
-  dockerfile = "backend/Dockerfile"
+  dockerfile = 'backend/Dockerfile'
+
+[env]
+  PYTHONPATH = '/app:/app/backend'
 
 [http_service]
-  internal_port = 8000
+  internal_port = 8080
   force_https = true
-  auto_stop_machines = "stop"
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
 
-[env]
-  PYTHONPATH = "/app:/app/backend"
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
+  memory_mb = 256
