@@ -137,4 +137,5 @@ fly deploy
 ## What to put on your CV
 
 - **API:** https://hr-onboarding.fly.dev
-- **UI:** https://hr-onboarding-web.fly.dev *(after Part 2)*
+- **UI:** https://hr-onboarding-web.fly.dev
+- **Admin:** https://hr-onboarding-web.fly.dev/admin/checkins
