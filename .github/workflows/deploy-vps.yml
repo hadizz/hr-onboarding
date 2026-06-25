@@ -38,7 +38,10 @@ jobs:
             git fetch origin
             git checkout main
             git pull --ff-only origin main
-            chmod +x deploy/vps/deploy.sh
+            if [ -f /root/env.txt ] && [ ! -f .env ]; then
+              cp /root/env.txt .env
+            fi
+            chmod +x deploy/vps/deploy.sh deploy/vps/bootstrap-vps.sh
             bash deploy/vps/deploy.sh ${{ github.event.inputs.service || 'all' }}
 
   dns:

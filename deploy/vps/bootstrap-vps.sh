@@ -11,7 +11,9 @@ if [[ ! -d "${APP_DIR}/.git" ]]; then
 fi
 
 if [[ ! -f "${APP_DIR}/.env" ]]; then
-  if [[ -f /root/hr-onboarding.env ]]; then
+  if [[ -f /root/env.txt ]]; then
+    cp /root/env.txt "${APP_DIR}/.env"
+  elif [[ -f /root/hr-onboarding.env ]]; then
     cp /root/hr-onboarding.env "${APP_DIR}/.env"
   else
     cp "${APP_DIR}/.env.example" "${APP_DIR}/.env"
