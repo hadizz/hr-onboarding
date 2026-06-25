@@ -17,7 +17,9 @@ from shared.tasks import complete_task, get_onboarding_status, list_checkins, re
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # RAG index builds lazily on first search — keeps /health fast on cold start.
+    from shared.db import init_db
+
+    init_db()
     yield
 
 

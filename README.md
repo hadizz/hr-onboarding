@@ -36,7 +36,7 @@ flowchart LR
   subgraph tools [HR Tools]
     MCP[MCP Server]
     RAG[Chroma RAG]
-    Tasks[SQLite Tasks]
+    Tasks[Postgres Tasks]
   end
   Chat --> API
   Progress --> API

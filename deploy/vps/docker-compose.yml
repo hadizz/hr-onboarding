@@ -7,7 +7,7 @@
 # Prerequisites on VPS:
 #   - Docker + Traefik already running (see /opt/zanbeel)
 #   - External network: docker network create zanbeel  (if missing)
-#   - /opt/hr-onboarding/.env with OPENAI_API_KEY
+#   - /opt/hr-onboarding/.env with OPENAI_API_KEY and DATABASE_URL
 
 name: hr-onboarding
 
@@ -16,6 +16,24 @@ networks:
     external: true
 
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: hr-onboarding-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: onboardai
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-onboardai}
+      POSTGRES_DB: onboardai
+    volumes:
+      - hr_onboarding_pg:/var/lib/postgresql/data
+    networks:
+      - zanbeel
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U onboardai -d onboardai"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
     build:
       context: ../..
@@ -24,11 +42,16 @@ services:
     restart: unless-stopped
     env_file:
       - ../../.env
+    environment:
+      DATABASE_URL: postgresql://onboardai:${POSTGRES_PASSWORD:-onboardai}@postgres:5432/onboardai
     volumes:
       - hr_onboarding_data:/app/data
       - ../../seed-data:/app/seed-data:ro
     networks:
       - zanbeel
+    depends_on:
+      postgres:
+        condition: service_healthy
     labels:
       - traefik.enable=true
       - traefik.docker.network=zanbeel
@@ -67,3 +90,4 @@ services:
 
 volumes:
   hr_onboarding_data:
+  hr_onboarding_pg:

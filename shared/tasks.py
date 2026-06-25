@@ -24,15 +24,18 @@ def create_onboarding_task(
         category = "Team"
 
     with get_connection() as conn:
-        cursor = conn.execute(
-            """
-            INSERT INTO onboarding_tasks (employee_id, title, due_day, category, status, created_at)
-            VALUES (?, ?, ?, ?, 'pending', ?)
-            """,
-            (employee_id, title.strip(), due_day, category, _now_iso()),
-        )
-        conn.commit()
-        task_id = cursor.lastrowid
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO onboarding_tasks (employee_id, title, due_day, category, status, created_at)
+                VALUES (%s, %s, %s, %s, 'pending', %s)
+                RETURNING id
+                """,
+                (employee_id, title.strip(), due_day, category, _now_iso()),
+            )
+            row = cur.fetchone()
+            conn.commit()
+            task_id = row["id"]
 
     return {
         "id": task_id,
@@ -47,15 +50,17 @@ def create_onboarding_task(
 def list_onboarding_tasks(employee_id: str) -> list[dict[str, Any]]:
     ensure_db()
     with get_connection() as conn:
-        rows = conn.execute(
-            """
-            SELECT id, employee_id, title, due_day, category, status, created_at
-            FROM onboarding_tasks
-            WHERE employee_id = ?
-            ORDER BY due_day ASC, id ASC
-            """,
-            (employee_id,),
-        ).fetchall()
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id, employee_id, title, due_day, category, status, created_at
+                FROM onboarding_tasks
+                WHERE employee_id = %s
+                ORDER BY due_day ASC, id ASC
+                """,
+                (employee_id,),
+            )
+            rows = cur.fetchall()
 
     return [dict(row) for row in rows]
 
@@ -63,18 +68,20 @@ def list_onboarding_tasks(employee_id: str) -> list[dict[str, Any]]:
 def complete_task(task_id: int, employee_id: str) -> dict[str, Any] | None:
     ensure_db()
     with get_connection() as conn:
-        conn.execute(
-            """
-            UPDATE onboarding_tasks SET status = 'completed'
-            WHERE id = ? AND employee_id = ?
-            """,
-            (task_id, employee_id),
-        )
-        conn.commit()
-        row = conn.execute(
-            "SELECT * FROM onboarding_tasks WHERE id = ? AND employee_id = ?",
-            (task_id, employee_id),
-        ).fetchone()
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE onboarding_tasks SET status = 'completed'
+                WHERE id = %s AND employee_id = %s
+                """,
+                (task_id, employee_id),
+            )
+            cur.execute(
+                "SELECT * FROM onboarding_tasks WHERE id = %s AND employee_id = %s",
+                (task_id, employee_id),
+            )
+            row = cur.fetchone()
+            conn.commit()
     return dict(row) if row else None
 
 
@@ -95,39 +102,44 @@ def get_onboarding_status(employee_id: str) -> dict[str, Any]:
 def list_checkins(employee_id: str | None = None) -> list[dict[str, Any]]:
     ensure_db()
     with get_connection() as conn:
-        if employee_id:
-            rows = conn.execute(
-                """
-                SELECT id, employee_id, day, topic, scheduled_at
-                FROM checkins
-                WHERE employee_id = ?
-                ORDER BY day ASC, scheduled_at DESC, id ASC
-                """,
-                (employee_id,),
-            ).fetchall()
-        else:
-            rows = conn.execute(
-                """
-                SELECT id, employee_id, day, topic, scheduled_at
-                FROM checkins
-                ORDER BY scheduled_at DESC, day ASC, id ASC
-                """
-            ).fetchall()
+        with conn.cursor() as cur:
+            if employee_id:
+                cur.execute(
+                    """
+                    SELECT id, employee_id, day, topic, scheduled_at
+                    FROM checkins
+                    WHERE employee_id = %s
+                    ORDER BY day ASC, scheduled_at DESC, id ASC
+                    """,
+                    (employee_id,),
+                )
+            else:
+                cur.execute(
+                    """
+                    SELECT id, employee_id, day, topic, scheduled_at
+                    FROM checkins
+                    ORDER BY scheduled_at DESC, day ASC, id ASC
+                    """
+                )
+            rows = cur.fetchall()
     return [dict(row) for row in rows]
 
 
 def schedule_checkin(employee_id: str, day: int, topic: str) -> dict[str, Any]:
     ensure_db()
     with get_connection() as conn:
-        cursor = conn.execute(
-            """
-            INSERT INTO checkins (employee_id, day, topic, scheduled_at)
-            VALUES (?, ?, ?, ?)
-            """,
-            (employee_id, day, topic.strip(), _now_iso()),
-        )
-        conn.commit()
-        checkin_id = cursor.lastrowid
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO checkins (employee_id, day, topic, scheduled_at)
+                VALUES (%s, %s, %s, %s)
+                RETURNING id
+                """,
+                (employee_id, day, topic.strip(), _now_iso()),
+            )
+            row = cur.fetchone()
+            conn.commit()
+            checkin_id = row["id"]
 
     return {
         "id": checkin_id,
@@ -141,10 +153,11 @@ def schedule_checkin(employee_id: str, day: int, topic: str) -> dict[str, Any]:
 def reset_employee_data(employee_id: str) -> None:
     ensure_db()
     with get_connection() as conn:
-        conn.execute("DELETE FROM onboarding_tasks WHERE employee_id = ?", (employee_id,))
-        conn.execute("DELETE FROM checkins WHERE employee_id = ?", (employee_id,))
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM onboarding_tasks WHERE employee_id = %s", (employee_id,))
+            cur.execute("DELETE FROM checkins WHERE employee_id = %s", (employee_id,))
         conn.commit()
 
 
 def tasks_to_json(tasks: list[dict]) -> str:
-    return json.dumps(tasks, indent=2)
+    return json.dumps(tasks, indent=2, default=str)

@@ -1,3 +1,4 @@
 mcp>=1.9.0
 chromadb>=0.6.0
 openai>=1.60.0
+psycopg[binary]>=3.2.0

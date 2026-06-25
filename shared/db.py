@@ -1,43 +1,45 @@
-import sqlite3
 from contextlib import contextmanager
 from datetime import datetime, timezone
 
-from shared.config import DB_PATH
+import psycopg
+from psycopg.rows import dict_row
+
+from shared.config import DATABASE_URL
 
 
 def init_db() -> None:
     with get_connection() as conn:
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS onboarding_tasks (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                employee_id TEXT NOT NULL,
-                title TEXT NOT NULL,
-                due_day INTEGER NOT NULL,
-                category TEXT NOT NULL,
-                status TEXT NOT NULL DEFAULT 'pending',
-                created_at TEXT NOT NULL
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS onboarding_tasks (
+                    id SERIAL PRIMARY KEY,
+                    employee_id TEXT NOT NULL,
+                    title TEXT NOT NULL,
+                    due_day INTEGER NOT NULL,
+                    category TEXT NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'pending',
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                )
+                """
             )
-            """
-        )
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS checkins (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                employee_id TEXT NOT NULL,
-                day INTEGER NOT NULL,
-                topic TEXT NOT NULL,
-                scheduled_at TEXT NOT NULL
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS checkins (
+                    id SERIAL PRIMARY KEY,
+                    employee_id TEXT NOT NULL,
+                    day INTEGER NOT NULL,
+                    topic TEXT NOT NULL,
+                    scheduled_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                )
+                """
             )
-            """
-        )
         conn.commit()
 
 
 @contextmanager
 def get_connection():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = psycopg.connect(DATABASE_URL, row_factory=dict_row)
     try:
         yield conn
     finally:
