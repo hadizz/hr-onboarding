@@ -47,7 +47,10 @@ services:
       retries: 3
 
   open-webui:
-    image: ghcr.io/open-webui/open-webui:main
+    build:
+      context: ../../open-webui
+      dockerfile: Dockerfile
+    image: hr-onboarding-webui:local
     container_name: hr-onboarding-webui
     restart: unless-stopped
     env_file:
