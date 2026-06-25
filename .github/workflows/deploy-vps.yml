@@ -37,7 +37,7 @@ jobs:
             cd /opt/hr-onboarding
             git fetch origin
             git checkout main
-            git pull --ff-only origin main
+            git reset --hard origin/main
             if [ -f /root/env.txt ] && [ ! -f .env ]; then
               cp /root/env.txt .env
             fi
