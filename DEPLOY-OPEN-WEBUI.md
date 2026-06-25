@@ -2,6 +2,21 @@
 
 Use [Open WebUI](https://github.com/open-webui/open-webui) as the chat interface for OnboardAI instead of (or alongside) the React frontend.
 
+> **Important:** Production apps (`hr-onboarding`, `hr-onboarding-web`) must not be reused for PR previews. Use the **dev** Fly apps below.
+
+## Dev vs production apps
+
+| Role | Production | Dev / PR preview |
+|------|------------|------------------|
+| Backend API | `hr-onboarding` | `hr-onboarding-dev` |
+| React UI | `hr-onboarding-web` | `hr-onboarding-web-dev` |
+| Open WebUI | `hr-onboarding-webui` | `hr-onboarding-webui-dev` |
+
+Config files:
+
+- Production: `fly.toml`, `frontend/fly.toml`, `open-webui/fly.toml`
+- Dev: `fly.dev.toml`, `frontend/fly.dev.toml`, `open-webui/fly.dev.toml`
+
 ## How it works
 
 ```mermaid
