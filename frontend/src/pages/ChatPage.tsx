@@ -7,7 +7,7 @@ import {
   resetOnboarding,
   streamChat,
 } from '../api';
-import type { ChatMessage, DemoEmployee, OnboardingStatus } from '../api';
+import type { AgentEvent, ChatMessage, DemoEmployee, OnboardingStatus } from '../api';
 
 const CATEGORY_COLORS: Record<string, string> = {
   HR: 'bg-purple-100 text-purple-800',
@@ -21,15 +21,48 @@ const SUGGESTIONS = [
   'When do I need to enroll in health insurance?',
 ];
 
-function AgentBadge({ agent, detail }: { agent: string; detail?: string }) {
-  const label = agent.charAt(0).toUpperCase() + agent.slice(1);
+function AgentFlowLog({ entries }: { entries: AgentEvent[] }) {
+  const logRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: 'smooth' });
+  }, [entries]);
+
+  if (entries.length === 0) return null;
+
+  const statusStyle: Record<string, string> = {
+    started: 'text-slate-500',
+    completed: 'text-emerald-700',
+    tool: 'text-amber-700',
+  };
+
+  const statusIcon: Record<string, string> = {
+    started: '→',
+    completed: '✓',
+    tool: '⚙',
+  };
+
   return (
-    <span
-      title={detail}
-      className="inline-flex items-center rounded-full bg-violet-50 px-2 py-0.5 text-xs text-violet-800 border border-violet-200"
-    >
-      {label} agent
-    </span>
+    <div className="border-t border-slate-200 bg-slate-950 px-4 py-3">
+      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">
+        Agent flow
+      </p>
+      <div
+        ref={logRef}
+        className="max-h-36 space-y-1 overflow-y-auto font-mono text-xs leading-relaxed"
+      >
+        {entries.map((entry, i) => (
+          <div key={i} className={statusStyle[entry.status] ?? 'text-slate-400'}>
+            <span className="text-slate-600">{statusIcon[entry.status] ?? '·'} </span>
+            <span className="font-semibold text-slate-300">
+              {entry.agent.charAt(0).toUpperCase() + entry.agent.slice(1)}
+            </span>
+            <span className="text-slate-500"> · </span>
+            <span>{entry.detail}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -49,6 +82,7 @@ export default function ChatPage() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [agentLog, setAgentLog] = useState<AgentEvent[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const refreshStatus = useCallback(async (employeeId: string) => {
@@ -75,6 +109,7 @@ export default function ChatPage() {
     setInput('');
     setError(null);
     setLoading(true);
+    setAgentLog([]);
 
     const userMsg: ChatMessage = { role: 'user', content: message };
     setMessages((prev) => [...prev, userMsg]);
@@ -102,6 +137,11 @@ export default function ChatPage() {
         if (event === 'citations') citations = data as string[];
         if (event === 'tool_calls') {
           toolCalls = (data as { name: string }[]).map((t) => t.name);
+        }
+        if (event === 'agent_log') {
+          const entry = data as AgentEvent;
+          setAgentLog((prev) => [...prev, entry]);
+          agentEvents = [...agentEvents, entry];
         }
         if (event === 'agent_events') {
           agentEvents = data as { agent: string; status: string; detail: string }[];
@@ -147,6 +187,7 @@ export default function ChatPage() {
     if (!employee) return;
     await resetOnboarding(employee.id);
     setMessages([]);
+    setAgentLog([]);
     await refreshStatus(employee.id);
   };
 
@@ -213,13 +254,6 @@ export default function ChatPage() {
                   }`}
                 >
                   <p className="whitespace-pre-wrap">{msg.content}</p>
-                  {msg.agentEvents && msg.agentEvents.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {msg.agentEvents.map((e) => (
-                        <AgentBadge key={e.agent} agent={e.agent} detail={e.detail} />
-                      ))}
-                    </div>
-                  )}
                   {msg.toolCalls && msg.toolCalls.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1">
                       {msg.toolCalls.map((t) => (
@@ -243,15 +277,17 @@ export default function ChatPage() {
               </div>
             ))}
 
-            {loading && (
+            {loading && messages[messages.length - 1]?.role !== 'assistant' && (
               <div className="flex justify-start">
                 <div className="rounded-2xl bg-slate-100 px-4 py-3 text-sm text-slate-500">
-                  Agents working...
+                  Waiting for agents...
                 </div>
               </div>
             )}
             <div ref={chatEndRef} />
           </div>
+
+          <AgentFlowLog entries={agentLog} />
 
           {error && (
             <div className="mx-4 mb-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">

@@ -2,15 +2,15 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: onboardai
-      POSTGRES_PASSWORD: onboardai
-      POSTGRES_DB: onboardai
+      POSTGRES_USER: ${POSTGRES_USER:-onboardai}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-onboardai}
+      POSTGRES_DB: ${POSTGRES_DB:-onboardai}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U onboardai -d onboardai"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-onboardai} -d ${POSTGRES_DB:-onboardai}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -24,7 +24,7 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgresql://onboardai:onboardai@postgres:5432/onboardai
+      DATABASE_URL: postgresql://${POSTGRES_USER:-onboardai}:${POSTGRES_PASSWORD:-onboardai}@postgres:5432/${POSTGRES_DB:-onboardai}
     volumes:
       - ./data:/app/data
       - ./seed-data:/app/seed-data
@@ -44,7 +44,7 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgresql://onboardai:onboardai@postgres:5432/onboardai
+      DATABASE_URL: postgresql://${POSTGRES_USER:-onboardai}:${POSTGRES_PASSWORD:-onboardai}@postgres:5432/${POSTGRES_DB:-onboardai}
     volumes:
       - ./data:/app/data
       - ./seed-data:/app/seed-data
@@ -64,13 +64,23 @@ services:
       backend:
         condition: service_healthy
 
-  adminer:
-    image: adminer:4
+  pgadmin:
+    image: dpage/pgadmin4:latest
     ports:
-      - "8080:8080"
+      - "8080:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@onboardai.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
+      - ./pgadmin/pgpass:/pgpass:ro
     depends_on:
       postgres:
         condition: service_healthy
 
 volumes:
   postgres_data:
+  pgadmin_data:

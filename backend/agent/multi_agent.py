@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from typing import Annotated, Any, Literal
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
@@ -228,12 +227,50 @@ def build_multi_agent():
     return graph.compile()
 
 
-def run_multi_agent(
+def _merge_state(accumulated: dict[str, Any], delta: dict[str, Any]) -> None:
+    list_keys = ("tool_calls_log", "agent_events", "citations")
+    for key, value in delta.items():
+        if key in list_keys:
+            accumulated[key] = accumulated.get(key, []) + value
+        else:
+            accumulated[key] = value
+
+
+def _tool_log_entries(tool_calls: list[dict[str, Any]], agent: str) -> list[dict[str, str]]:
+    entries = []
+    for tc in tool_calls:
+        args_preview = ", ".join(f"{k}={v!r}" for k, v in tc.get("args", {}).items())
+        entries.append(
+            {
+                "agent": agent,
+                "status": "tool",
+                "detail": f"{tc['name']}({args_preview})",
+            }
+        )
+    return entries
+
+
+def _next_node_starts(node_name: str, state: dict[str, Any]) -> list[dict[str, str]]:
+    if node_name == "orchestrator":
+        if state.get("needs_research"):
+            return [{"agent": "research", "status": "started", "detail": "Searching handbook..."}]
+        if state.get("needs_workflow"):
+            return [{"agent": "workflow", "status": "started", "detail": "Running onboarding workflow..."}]
+        return [{"agent": "synthesizer", "status": "started", "detail": "Writing final answer..."}]
+    if node_name == "research":
+        if state.get("needs_workflow"):
+            return [{"agent": "workflow", "status": "started", "detail": "Running onboarding workflow..."}]
+        return [{"agent": "synthesizer", "status": "started", "detail": "Writing final answer..."}]
+    if node_name == "workflow":
+        return [{"agent": "synthesizer", "status": "started", "detail": "Writing final answer..."}]
+    return []
+
+
+def _build_initial_state(
     message: str,
     employee_id: str,
     history: list[dict] | None = None,
 ) -> dict[str, Any]:
-    agent = build_multi_agent()
     history_context = ""
     if history:
         lines = [f"{m['role']}: {m['content']}" for m in history[-4:]]
@@ -243,25 +280,69 @@ def run_multi_agent(
     if history_context:
         user_message = f"{history_context}\n\nCurrent question: {message}"
 
-    final_state = agent.invoke(
-        {
-            "user_message": user_message,
-            "employee_id": employee_id,
-            "needs_research": False,
-            "needs_workflow": False,
-            "routing_reason": "",
-            "research_output": "",
-            "workflow_output": "",
-            "final_response": "",
-            "tool_calls_log": [],
-            "agent_events": [],
-            "citations": [],
-        }
+    return {
+        "user_message": user_message,
+        "employee_id": employee_id,
+        "needs_research": False,
+        "needs_workflow": False,
+        "routing_reason": "",
+        "research_output": "",
+        "workflow_output": "",
+        "final_response": "",
+        "tool_calls_log": [],
+        "agent_events": [],
+        "citations": [],
+    }
+
+
+def stream_multi_agent(
+    message: str,
+    employee_id: str,
+    history: list[dict] | None = None,
+):
+    """Yield (event_type, data) tuples while the multi-agent graph runs."""
+    agent = build_multi_agent()
+    initial = _build_initial_state(message, employee_id, history)
+    accumulated = dict(initial)
+
+    yield (
+        "agent_log",
+        {"agent": "orchestrator", "status": "started", "detail": "Analyzing your question..."},
     )
 
-    return {
-        "response": final_state["final_response"],
-        "tool_calls": final_state["tool_calls_log"],
-        "citations": final_state["citations"],
-        "agent_events": final_state["agent_events"],
-    }
+    for step in agent.stream(initial):
+        for node_name, delta in step.items():
+            node_tools = delta.get("tool_calls_log", [])
+            _merge_state(accumulated, delta)
+
+            for evt in delta.get("agent_events", []):
+                yield ("agent_log", evt)
+
+            for entry in _tool_log_entries(node_tools, node_name):
+                yield ("agent_log", entry)
+
+            for start_evt in _next_node_starts(node_name, accumulated):
+                yield ("agent_log", start_evt)
+
+    yield (
+        "result",
+        {
+            "response": accumulated["final_response"],
+            "tool_calls": accumulated["tool_calls_log"],
+            "citations": accumulated["citations"],
+            "agent_events": accumulated["agent_events"],
+        },
+    )
+
+
+def run_multi_agent(
+    message: str,
+    employee_id: str,
+    history: list[dict] | None = None,
+) -> dict[str, Any]:
+    result = None
+    for event_type, data in stream_multi_agent(message, employee_id, history):
+        if event_type == "result":
+            result = data
+    assert result is not None
+    return result
