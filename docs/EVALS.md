@@ -43,10 +43,12 @@ flowchart LR
 **Run (Docker — recommended):**
 
 ```bash
-./scripts/run-evals-docker.sh                        # all 17 scenarios
+./scripts/run-evals-docker.sh                        # all 28 scenarios
 ./scripts/run-evals-docker.sh --filter prompt_injection
 ./scripts/run-evals-docker.sh --filter remote_policy
 ```
+
+The helper script passes `--build` and mounts `./shared` into the evals container so new `shared/` modules (e.g. `eval_results.py`) are always available without a stale image.
 
 **Run (local):**
 
@@ -117,11 +119,37 @@ The `evals` compose profile uses `evals/Dockerfile` (backend + eval deps + DeepE
 
 ```bash
 docker-compose up -d postgres
-docker-compose --profile evals run --rm evals
-docker-compose --profile evals run --rm --entrypoint python evals /app/evals/run_deepeval.py
+docker-compose --profile evals run --rm --build evals
+docker-compose --profile evals run --rm --build --entrypoint python evals /app/evals/run_deepeval.py
 ```
 
-`./evals` is volume-mounted — results and scenario edits persist on the host.
+**Volume mounts:** `./evals` and `./shared` are mounted into the evals container so scenario edits and new shared modules apply without rebuilding the image. Use `--build` when `backend/` or Dockerfile dependencies change.
+
+**Common error:** `ModuleNotFoundError: No module named 'shared.eval_results'` — image built before `shared/eval_results.py` existed. Fix: `./scripts/run-evals-docker.sh` (includes `--build` + shared mount) or `docker-compose --profile evals run --rm --build evals`.
+
+**VPS error:** `failed to resolve host 'postgres'` — evals container was not on the `zanbeel` Docker network. Ensure `deploy/vps/docker-compose.yml` has `networks: [zanbeel]` on the evals service.
+
+---
+
+## Current baseline (golden harness)
+
+Last full run: **22/28 passed (78.6%)** — below the 85% pass threshold.
+
+| Status | Scenarios |
+|--------|-----------|
+| **Pass (22)** | All RAG/workflow core cases + **all 6 `prompt_injection_*`** scenarios |
+| **Fail (6)** | Agent/tooling gaps — not security regressions |
+
+| Failed scenario | Failed checks | Notes |
+|-----------------|---------------|-------|
+| `slack_channels` | `tools_called`, `cites_source` | Listed tasks instead of searching handbook for channel names |
+| `schedule_checkin` | `tools_called` | Generic deflection instead of `schedule_checkin_tool` |
+| `headquarters_location` | `contains` | Could not surface Helsinki HQ from handbook |
+| `it_helpdesk` | `contains`, `tools_called`, `cites_source` | Gave generic IT advice without handbook lookup |
+| `remote_policy_and_first_week` | `min_tasks_created` | Answered policy but created fewer than 3 tasks |
+| `onboarding_buddy` | `tools_called`, `cites_source` | Used task/check-in tools instead of handbook for buddy policy |
+
+**Security takeaway:** every injection scenario passes — early exit, output guardrails, and write-tool blocking are working. Remaining failures are RAG citation and workflow routing quality.
 
 ---
 
@@ -134,7 +162,16 @@ After running evals, open the frontend:
 
 The page reads `latest.json` and `deepeval-latest.json` via `GET /api/evals/results`. The backend mounts `evals/results/` (configurable with `EVALS_RESULTS_DIR`).
 
-**VPS:** Golden evals run automatically after each `all` or `backend` deploy (`deploy/vps/run-evals.sh`). Manual run: `bash deploy/vps/deploy.sh evals`.
+### Production (VPS)
+
+| Topic | Detail |
+|-------|--------|
+| **Auto-run** | Golden evals run after each `all` or `backend` deploy via `deploy/vps/run-evals.sh` |
+| **Manual** | `bash deploy/vps/deploy.sh evals` on the server |
+| **Results path** | `/opt/hr-onboarding/evals/results/` (gitignored — not in the repo) |
+| **Blank dashboard** | Local runs do not sync to VPS; wait for deploy evals or run manually on server |
+
+See [DEPLOY-VPS.md](./DEPLOY-VPS.md) for full deploy and troubleshooting.
 
 After `git pull`, rebuild: `docker-compose up -d --build backend frontend`
 
@@ -197,5 +234,6 @@ evals/
 ## Related
 
 - [SECURITY.md](./SECURITY.md) — prompt injection defenses
+- [DEPLOY-VPS.md](./DEPLOY-VPS.md) — production deploy + auto evals
 - [MULTI-AGENT.md](./MULTI-AGENT.md) — what the evals exercise
 - [RUN.md](./RUN.md) — dev environment setup

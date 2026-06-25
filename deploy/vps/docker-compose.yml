@@ -109,6 +109,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - zanbeel
 
   pgadmin:
     image: dpage/pgadmin4:latest
