@@ -4,7 +4,7 @@ set -euo pipefail
 
 ZONE_NAME="${ZONE_NAME:-xpotify.cc}"
 VPS_IP="${VPS_IP:-65.109.205.51}"
-RECORDS=(hr-api hr)
+RECORDS=(hr-api hr hr-app)
 
 : "${CF_API_EMAIL:?Set CF_API_EMAIL}"
 : "${CF_API_KEY:?Set CF_API_KEY (Global API Key from Cloudflare profile)}"

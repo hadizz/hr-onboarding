@@ -11,6 +11,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from agent.onboarding_agent import run_agent, stream_agent
+from app.openai_compat import router as openai_router
 from shared.config import DEFAULT_EMPLOYEE_ID
 from shared.tasks import complete_task, get_onboarding_status, list_checkins, reset_employee_data
 
@@ -35,6 +36,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(openai_router)
 
 
 class ChatMessage(BaseModel):

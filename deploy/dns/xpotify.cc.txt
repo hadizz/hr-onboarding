@@ -7,4 +7,5 @@
 # All A records point to the Hetzner VPS (same host as zanbeel.app).
 
 hr-api.xpotify.cc.    300    IN    A    65.109.205.51    ; proxied=false
-hr.xpotify.cc.        300    IN    A    65.109.205.51    ; proxied=false
+hr.xpotify.cc.        300    IN    A    65.109.205.51    ; proxied=false (Open WebUI)
+hr-app.xpotify.cc.    300    IN    A    65.109.205.51    ; proxied=false (React UI)
