@@ -17,7 +17,7 @@ New hires ask the same 50 HR questions. HR teams manually track onboarding tasks
 | Django + LlamaIndex RAG API | FastAPI + LangGraph agent |
 | Passive document Q&A | Multi-tool autonomous agent |
 | Streaming chat only | Chat + task tracking + check-ins |
-| No evals | 16-scenario automated eval suite |
+| No evals | 17-scenario automated eval suite |
 | Backend only | Python + React full stack |
 | — | Custom MCP server for HR tools |
 
@@ -53,7 +53,7 @@ flowchart LR
 - **Custom MCP server** exposing the same HR tools for Cursor/Claude integration
 - **Chroma RAG** over seed HR documents with source citations
 - **React UI** — streaming chat, citation chips, tool-call indicators, onboarding progress sidebar
-- **Eval harness** — 16 golden scenarios testing retrieval, tool use, answer quality, and prompt-injection resistance
+- **Eval harness** — 17 golden scenarios testing retrieval, tool use, answer quality, and prompt-injection resistance
 - **Prompt-injection defenses** — input sandboxing, output guardrails, write-tool blocking, server-side tool validation
 
 ## Security
@@ -69,7 +69,7 @@ OnboardAI uses layered defenses against prompt injection (see `.notes/SECURITY.m
 | Tool authorization | Write tools blocked when injection suspected; max 5 tasks/message |
 | Server validation | Task title/topic length, due-day range enforced in Python |
 
-Run injection evals: `python evals/run_evals.py` (scenarios `prompt_injection_*`).
+Run injection evals: `./scripts/run-evals-docker.sh --filter prompt_injection` (see [Eval Suite](#eval-suite)).
 
 ## Quick Start
 
@@ -115,15 +115,116 @@ python mcp-server/server.py
 
 ## Eval Suite
 
+### Docker (recommended)
+
+Uses the same backend image and Postgres as the app. Results land on your machine at `evals/results/latest.json`.
+
+```bash
+# Make sure .env has OPENAI_API_KEY, then:
+
+# All 17 scenarios (~3–5 min)
+./scripts/run-evals-docker.sh
+
+# Injection scenarios only (~1 min)
+./scripts/run-evals-docker.sh --filter prompt_injection
+
+# One scenario by id substring
+./scripts/run-evals-docker.sh --filter remote_policy
+```
+
+**Manual equivalent** (without the helper script):
+
+```bash
+docker-compose up -d postgres
+docker-compose --profile evals run --rm evals
+docker-compose --profile evals run --rm evals --filter prompt_injection
+```
+
+### View results
+
+**Terminal summary** — printed automatically by `./scripts/run-evals-docker.sh`.
+
+**Full JSON report:**
+
+```bash
+cat evals/results/latest.json
+```
+
+Or open `evals/results/latest.json` in your editor. Each scenario includes:
+
+| Field | Meaning |
+|---|---|
+| `passed` | `true` / `false` |
+| `checks` | Which assertions passed (`contains`, `not_contains`, `tools_called`, …) |
+| `response_preview` | First 300 chars of the agent reply |
+| `tool_calls` | Tools the agent invoked |
+| `error` | Exception message if the run crashed |
+
+**Pretty-print one failed scenario:**
+
+```bash
+python3 -c "
+import json
+r = json.load(open('evals/results/latest.json'))
+for row in r['results']:
+    if not row.get('passed'):
+        print(json.dumps(row, indent=2))
+"
+```
+
+### Local Python (without Docker)
+
 ```bash
 export PYTHONPATH="$(pwd):$(pwd)/backend"
-export OPENAI_API_KEY=sk-...
+export $(grep -v '^#' .env | xargs)
 python evals/run_evals.py
+python evals/run_evals.py --filter prompt_injection
 ```
 
 Results are saved to `evals/results/latest.json`.
 
-### Eval Scenarios (16)
+### DeepEval (LLM-as-judge)
+
+[DeepEval](https://github.com/confident-ai/deepeval) adds semantic metrics on top of the golden harness:
+
+| Scenario type | Metrics |
+|---|---|
+| RAG / handbook (`cites_source`) | Faithfulness + Answer Relevancy |
+| Workflow (tasks, check-ins) | Answer Relevancy |
+| `prompt_injection_*` | GEval injection-resistance rubric |
+
+**Docker:**
+
+```bash
+# All scenarios (~5–10 min, uses extra judge API calls)
+./scripts/run-evals-docker.sh deepeval
+
+# Injection only
+./scripts/run-evals-docker.sh deepeval --filter prompt_injection
+```
+
+Results: `evals/results/deepeval-latest.json`
+
+**Local:**
+
+```bash
+pip install -r evals/requirements.txt
+export PYTHONPATH="$(pwd):$(pwd)/backend"
+export $(grep -v '^#' .env | xargs)
+python evals/run_deepeval.py
+python evals/run_deepeval.py --filter remote_policy
+```
+
+**Pytest integration:**
+
+```bash
+deepeval test run evals/test_deepeval.py
+DEEPEVAL_FILTER=prompt_injection deepeval test run evals/test_deepeval.py
+```
+
+Optional env vars: `DEEPEVAL_THRESHOLD` (default `0.7`), `DEEPEVAL_MODEL` (default `gpt-4o-mini`).
+
+### Eval Scenarios (17)
 
 | Scenario | Tests |
 |---|---|
@@ -140,6 +241,7 @@ Results are saved to `evals/results/latest.json`.
 | code_of_conduct | Harassment policy |
 | parental_leave | 16 weeks leave |
 | prompt_injection_fixed_response | Blocks canned "service down" hijack |
+| prompt_injection_hacker_down_message | Blocks hacker + "sorry we are down" variant |
 | prompt_injection_ignore_instructions | Blocks role-override attacks |
 | prompt_injection_reveal_prompt | Blocks system-prompt exfiltration |
 | prompt_injection_task_spam | Blocks mass task creation via injection |

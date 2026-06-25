@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import sys
@@ -17,7 +18,7 @@ sys.path.insert(0, str(ROOT / "backend"))
 
 from agent.onboarding_agent import run_agent  # noqa: E402
 from shared.config import DEFAULT_EMPLOYEE_ID  # noqa: E402
-from shared.tasks import reset_employee_data  # noqa: E402
+from shared.tasks import list_onboarding_tasks, reset_employee_data  # noqa: E402
 
 EVALS_DIR = Path(__file__).parent
 RESULTS_DIR = EVALS_DIR / "results"
@@ -60,6 +61,14 @@ def run_scenario(scenario: dict) -> dict:
     if "not_contains" in expect:
         checks["not_contains"] = not check_contains(response, expect["not_contains"])
 
+    if "tools_not_called" in expect:
+        names = {tc["name"] for tc in tool_calls}
+        checks["tools_not_called"] = not any(name in names for name in expect["tools_not_called"])
+
+    if "max_tasks_in_db" in expect:
+        tasks = list_onboarding_tasks(employee_id)
+        checks["max_tasks_in_db"] = len(tasks) <= expect["max_tasks_in_db"]
+
     if "tools_called" in expect:
         checks["tools_called"] = check_tools_called(tool_calls, expect["tools_called"])
 
@@ -87,12 +96,28 @@ def run_scenario(scenario: dict) -> dict:
     }
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Run OnboardAI golden eval scenarios")
+    parser.add_argument(
+        "--filter",
+        help="Only run scenarios whose id contains this substring (e.g. prompt_injection)",
+    )
+    return parser.parse_args()
+
+
 def main() -> int:
+    args = parse_args()
     if not os.getenv("OPENAI_API_KEY"):
         print("ERROR: OPENAI_API_KEY required for evals")
         return 1
 
     scenarios = load_scenarios()
+    if args.filter:
+        scenarios = [s for s in scenarios if args.filter in s["id"]]
+        if not scenarios:
+            print(f"ERROR: No scenarios matched filter '{args.filter}'")
+            return 1
+        print(f"Running {len(scenarios)} scenario(s) matching '{args.filter}'")
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
     results = []
@@ -108,7 +133,19 @@ def main() -> int:
                 "error": str(e),
             }
         status = "PASS" if outcome.get("passed") else "FAIL"
-        print(f"  {status}")
+        print(f"  {status}", flush=True)
+        if not outcome.get("passed"):
+            if outcome.get("error"):
+                print(f"    error: {outcome['error']}", flush=True)
+            for check, ok in outcome.get("checks", {}).items():
+                if not ok:
+                    print(f"    failed check: {check}", flush=True)
+            preview = outcome.get("response_preview", "")
+            if preview:
+                print(f"    response: {preview[:200]}", flush=True)
+            tools = outcome.get("tool_calls", [])
+            if tools:
+                print(f"    tools: {', '.join(tools)}", flush=True)
         results.append(outcome)
 
     passed = sum(1 for r in results if r.get("passed"))
@@ -130,6 +167,10 @@ def main() -> int:
 
     print(f"\nEval complete: {passed}/{total} passed ({pass_rate}%)")
     print(f"Report: {report_path}")
+    print("\nSummary:")
+    for row in results:
+        mark = "PASS" if row.get("passed") else "FAIL"
+        print(f"  [{mark}] {row['id']}")
     return 0 if passed >= total * 0.85 else 1
 
 

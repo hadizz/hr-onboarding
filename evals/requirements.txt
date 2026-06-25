@@ -5,3 +5,6 @@ langchain-openai>=0.3.0
 chromadb>=0.6.0
 openai>=1.60.0
 fastapi>=0.115.0
+psycopg[binary]>=3.2.0
+deepeval>=2.0.0
+pytest>=8.0.0
