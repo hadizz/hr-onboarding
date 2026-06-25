@@ -29,6 +29,9 @@ case "${SERVICE}" in
   frontend)
     docker compose -f "${COMPOSE_FILE}" up -d --build frontend
     ;;
+  evals)
+    docker compose -f "${COMPOSE_FILE}" --profile evals run --rm evals "${@:2}"
+    ;;
   *)
     docker compose -f "${COMPOSE_FILE}" up -d --build "${SERVICE}"
     ;;

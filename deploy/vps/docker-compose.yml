@@ -91,6 +91,24 @@ services:
       - traefik.http.routers.hr-onboarding-web.tls.certresolver=letsencrypt
       - traefik.http.services.hr-onboarding-web.loadbalancer.server.port=80
 
+  evals:
+    profiles: ["evals"]
+    build:
+      context: ../..
+      dockerfile: evals/Dockerfile
+    env_file:
+      - ../../.env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-onboardai}:${POSTGRES_PASSWORD:-onboardai}@postgres:5432/${POSTGRES_DB:-onboardai}
+      EVALS_RESULTS_DIR: /app/evals/results
+    volumes:
+      - ../../evals:/app/evals
+      - hr_onboarding_data:/app/data
+      - ../../seed-data:/app/seed-data:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: hr-onboarding-pgadmin

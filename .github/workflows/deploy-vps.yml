@@ -8,11 +8,14 @@ on:
       - 'frontend/**'
       - 'shared/**'
       - 'seed-data/**'
+      - 'evals/**'
+      - 'scripts/**'
       - 'deploy/vps/**'
+      - 'docker-compose.yml'
   workflow_dispatch:
     inputs:
       service:
-        description: 'Service to deploy (all, backend, frontend)'
+        description: 'Service to deploy (all, backend, frontend, evals)'
         required: false
         default: 'all'
 
