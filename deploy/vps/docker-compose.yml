@@ -1,0 +1,69 @@
+# VPS production stack — Traefik on shared `zanbeel` network (Hetzner 65.109.205.51)
+#
+# Domains:
+#   hr-api.xpotify.cc  → backend (FastAPI :8000)
+#   hr.xpotify.cc      → frontend (nginx :80)
+#
+# Prerequisites on VPS:
+#   - Docker + Traefik already running (see /opt/zanbeel)
+#   - External network: docker network create zanbeel  (if missing)
+#   - /opt/hr-onboarding/.env with OPENAI_API_KEY
+
+name: hr-onboarding
+
+networks:
+  zanbeel:
+    external: true
+
+services:
+  backend:
+    build:
+      context: ../..
+      dockerfile: backend/Dockerfile
+    container_name: hr-onboarding-backend
+    restart: unless-stopped
+    env_file:
+      - ../../.env
+    volumes:
+      - hr_onboarding_data:/app/data
+      - ../../seed-data:/app/seed-data:ro
+    networks:
+      - zanbeel
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=zanbeel
+      - traefik.http.routers.hr-onboarding-api.rule=Host(`hr-api.xpotify.cc`)
+      - traefik.http.routers.hr-onboarding-api.entrypoints=websecure
+      - traefik.http.routers.hr-onboarding-api.tls=true
+      - traefik.http.routers.hr-onboarding-api.tls.certresolver=letsencrypt
+      - traefik.http.services.hr-onboarding-api.loadbalancer.server.port=8000
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ../../frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: https://hr-api.xpotify.cc
+    container_name: hr-onboarding-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - zanbeel
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=zanbeel
+      - traefik.http.routers.hr-onboarding-web.rule=Host(`hr.xpotify.cc`)
+      - traefik.http.routers.hr-onboarding-web.entrypoints=websecure
+      - traefik.http.routers.hr-onboarding-web.tls=true
+      - traefik.http.routers.hr-onboarding-web.tls.certresolver=letsencrypt
+      - traefik.http.services.hr-onboarding-web.loadbalancer.server.port=80
+
+volumes:
+  hr_onboarding_data:

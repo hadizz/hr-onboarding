@@ -1,0 +1,60 @@
+name: Deploy to VPS (xpotify.cc)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'shared/**'
+      - 'seed-data/**'
+      - 'deploy/vps/**'
+      - 'deploy/dns/**'
+  workflow_dispatch:
+    inputs:
+      service:
+        description: 'Service to deploy (all, backend, frontend)'
+        required: false
+        default: 'all'
+
+jobs:
+  deploy:
+    name: Deploy to Hetzner VPS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: 65.109.205.51
+          username: root
+          key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          script: |
+            if [ ! -d /opt/hr-onboarding/.git ]; then
+              git clone https://github.com/hadizz/hr-onboarding.git /opt/hr-onboarding
+            fi
+            cd /opt/hr-onboarding
+            git fetch origin
+            git checkout main
+            git pull --ff-only origin main
+            if [ -f /root/env.txt ] && [ ! -f .env ]; then
+              cp /root/env.txt .env
+            fi
+            chmod +x deploy/vps/deploy.sh deploy/vps/bootstrap-vps.sh
+            bash deploy/vps/deploy.sh ${{ github.event.inputs.service || 'all' }}
+
+  dns:
+    name: Update Cloudflare DNS
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply DNS records
+        env:
+          CF_API_EMAIL: ${{ secrets.CF_API_EMAIL }}
+          CF_API_KEY: ${{ secrets.CF_API_KEY }}
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq jq
+          chmod +x deploy/dns/apply-xpotify-dns.sh
+          bash deploy/dns/apply-xpotify-dns.sh

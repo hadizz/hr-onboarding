@@ -1,0 +1,10 @@
+# Cloudflare DNS import for xpotify.cc (HR OnboardAI on Zanbeel VPS)
+#
+# Import in Cloudflare dashboard → DNS → Records, or use:
+#   CF_API_EMAIL=... CF_API_KEY=... bash deploy/dns/apply-xpotify-dns.sh
+#
+# IMPORTANT: DNS only (grey cloud / proxied OFF) so Traefik can issue Let's Encrypt certs.
+# All A records point to the Hetzner VPS (same host as zanbeel.app).
+
+hr-api.xpotify.cc.    300    IN    A    65.109.205.51    ; proxied=false
+hr.xpotify.cc.        300    IN    A    65.109.205.51    ; proxied=false
