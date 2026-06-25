@@ -134,6 +134,8 @@ After running evals, open the frontend:
 
 The page reads `latest.json` and `deepeval-latest.json` via `GET /api/evals/results`. The backend mounts `evals/results/` (configurable with `EVALS_RESULTS_DIR`).
 
+After `git pull`, rebuild: `docker-compose up -d --build backend frontend`
+
 ---
 
 **Terminal** — `./scripts/run-evals-docker.sh` prints a PASS/FAIL summary.

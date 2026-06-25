@@ -81,7 +81,15 @@ export interface EvalReportBundle {
 
 export async function fetchEvalResults(): Promise<EvalReportBundle> {
   const res = await fetch(`${API_BASE}/api/evals/results`);
-  if (!res.ok) throw new Error('Failed to fetch eval results');
+  if (!res.ok) {
+    const text = await res.text();
+    if (res.status === 404) {
+      throw new Error(
+        'Eval API not found. Rebuild containers: docker-compose up -d --build backend frontend',
+      );
+    }
+    throw new Error(`Failed to fetch eval results (${res.status}): ${text}`);
+  }
   return res.json();
 }
 

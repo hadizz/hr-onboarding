@@ -71,7 +71,10 @@ function ScenarioTable({
 }) {
   if (rows.length === 0) {
     return (
-      <p className="px-4 py-8 text-center text-sm italic text-slate-400">No scenario results in report.</p>
+      <p className="px-4 py-8 text-center text-sm italic text-slate-400">
+        No scenario rows in this report. Re-run evals to populate{' '}
+        <code className="text-xs">evals/results/</code>.
+      </p>
     );
   }
 
@@ -150,6 +153,15 @@ export default function EvalsAdmin() {
     load();
   }, [load]);
 
+  useEffect(() => {
+    if (!data) return;
+    const goldenRows = data.golden.report?.results ?? [];
+    const deepevalRows = data.deepeval.report?.results ?? [];
+    if (goldenRows.length === 0 && deepevalRows.length > 0) {
+      setTab('deepeval');
+    }
+  }, [data]);
+
   const goldenRows = data?.golden.report?.results ?? [];
   const deepevalRows = data?.deepeval.report?.results ?? [];
 
@@ -184,9 +196,30 @@ export default function EvalsAdmin() {
       </header>
 
       <main className="mx-auto max-w-7xl space-y-6 p-6">
-        {error && (
-          <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        {loading && !data && (
+          <p className="text-sm text-slate-500">Loading eval reports…</p>
         )}
+
+        {error && (
+          <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+            <p className="font-medium">{error}</p>
+            <p className="mt-1 text-red-600">
+              After pulling new code, run:{' '}
+              <code className="rounded bg-red-100 px-1">docker-compose up -d --build backend frontend</code>
+            </p>
+          </div>
+        )}
+
+        {data?.golden.available &&
+          data.golden.report &&
+          data.golden.report.total > 0 &&
+          goldenRows.length === 0 && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              Golden report has a summary but no scenario rows (stale placeholder). Run{' '}
+              <code className="rounded bg-amber-100 px-1">./scripts/run-evals-docker.sh</code> to
+              regenerate.
+            </div>
+          )}
 
         <div className="grid gap-4 md:grid-cols-2">
           <SummaryCard
