@@ -3,11 +3,12 @@
 # Domains:
 #   hr-api.xpotify.cc  → backend (FastAPI :8000)
 #   hr.xpotify.cc      → React frontend
+#   hr-db.xpotify.cc   → pgAdmin (Postgres UI)
 #
 # Prerequisites on VPS:
 #   - Docker + Traefik already running (see /opt/zanbeel)
 #   - External network: docker network create zanbeel  (if missing)
-#   - /opt/hr-onboarding/.env with OPENAI_API_KEY and DATABASE_URL
+#   - /opt/hr-onboarding/.env with OPENAI_API_KEY, POSTGRES_*, PGADMIN_*
 
 name: hr-onboarding
 
@@ -21,15 +22,15 @@ services:
     container_name: hr-onboarding-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: onboardai
+      POSTGRES_USER: ${POSTGRES_USER:-onboardai}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-onboardai}
-      POSTGRES_DB: onboardai
+      POSTGRES_DB: ${POSTGRES_DB:-onboardai}
     volumes:
       - hr_onboarding_pg:/var/lib/postgresql/data
     networks:
       - zanbeel
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U onboardai -d onboardai"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-onboardai} -d ${POSTGRES_DB:-onboardai}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -43,7 +44,7 @@ services:
     env_file:
       - ../../.env
     environment:
-      DATABASE_URL: postgresql://onboardai:${POSTGRES_PASSWORD:-onboardai}@postgres:5432/onboardai
+      DATABASE_URL: postgresql://${POSTGRES_USER:-onboardai}:${POSTGRES_PASSWORD:-onboardai}@postgres:5432/${POSTGRES_DB:-onboardai}
     volumes:
       - hr_onboarding_data:/app/data
       - ../../seed-data:/app/seed-data:ro
@@ -88,6 +89,34 @@ services:
       - traefik.http.routers.hr-onboarding-web.tls.certresolver=letsencrypt
       - traefik.http.services.hr-onboarding-web.loadbalancer.server.port=80
 
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: hr-onboarding-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@onboardai.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    volumes:
+      - hr_onboarding_pgadmin:/var/lib/pgadmin
+      - ../../pgadmin/servers.json:/pgadmin4/servers.json:ro
+      - ../../pgadmin/pgpass:/pgpass:ro
+    networks:
+      - zanbeel
+    depends_on:
+      postgres:
+        condition: service_healthy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=zanbeel
+      - traefik.http.routers.hr-onboarding-db.rule=Host(`hr-db.xpotify.cc`)
+      - traefik.http.routers.hr-onboarding-db.entrypoints=websecure
+      - traefik.http.routers.hr-onboarding-db.tls=true
+      - traefik.http.routers.hr-onboarding-db.tls.certresolver=letsencrypt
+      - traefik.http.services.hr-onboarding-db.loadbalancer.server.port=80
+
 volumes:
   hr_onboarding_data:
   hr_onboarding_pg:
+  hr_onboarding_pgadmin:
