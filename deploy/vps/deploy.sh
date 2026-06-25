@@ -15,7 +15,9 @@ fi
 
 docker network inspect zanbeel >/dev/null 2>&1 || docker network create zanbeel
 
-git pull --ff-only origin "${DEPLOY_BRANCH:-main}"
+git fetch origin "${DEPLOY_BRANCH:-main}"
+git checkout "${DEPLOY_BRANCH:-main}"
+git reset --hard "origin/${DEPLOY_BRANCH:-main}"
 
 case "${SERVICE}" in
   all)
