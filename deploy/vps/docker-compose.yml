@@ -45,9 +45,11 @@ services:
       - ../../.env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-onboardai}:${POSTGRES_PASSWORD:-onboardai}@postgres:5432/${POSTGRES_DB:-onboardai}
+      EVALS_RESULTS_DIR: /app/evals/results
     volumes:
       - hr_onboarding_data:/app/data
       - ../../seed-data:/app/seed-data:ro
+      - ../../evals/results:/app/evals/results
     networks:
       - zanbeel
     depends_on:

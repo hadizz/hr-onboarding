@@ -25,9 +25,11 @@ services:
       - .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-onboardai}:${POSTGRES_PASSWORD:-onboardai}@postgres:5432/${POSTGRES_DB:-onboardai}
+      EVALS_RESULTS_DIR: /app/evals/results
     volumes:
       - ./data:/app/data
       - ./seed-data:/app/seed-data
+      - ./evals/results:/app/evals/results
     depends_on:
       postgres:
         condition: service_healthy
@@ -73,6 +75,7 @@ services:
       - .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-onboardai}:${POSTGRES_PASSWORD:-onboardai}@postgres:5432/${POSTGRES_DB:-onboardai}
+      EVALS_RESULTS_DIR: /app/evals/results
     volumes:
       - ./evals:/app/evals
       - ./data:/app/data

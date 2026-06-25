@@ -153,7 +153,7 @@ docker-compose --profile evals run --rm evals --filter prompt_injection
 cat evals/results/latest.json
 ```
 
-Or open `evals/results/latest.json` in your editor. Each scenario includes:
+Or open **Admin → Evals** in the app at `/admin/evals`.
 
 | Field | Meaning |
 |---|---|

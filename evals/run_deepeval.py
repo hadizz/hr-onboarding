@@ -15,8 +15,9 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "backend"))
 
 from deepeval_runner import load_scenarios, run_scenario_deepeval  # noqa: E402
+from shared.eval_results import deepeval_report_path, results_dir  # noqa: E402
 
-RESULTS_DIR = Path(__file__).parent / "results"
+RESULTS_DIR = results_dir()
 
 
 def parse_args() -> argparse.Namespace:
@@ -84,7 +85,7 @@ def main() -> int:
         "results": results,
     }
 
-    report_path = RESULTS_DIR / "deepeval-latest.json"
+    report_path = deepeval_report_path()
     with open(report_path, "w", encoding="utf-8") as handle:
         json.dump(report, handle, indent=2)
 

@@ -57,7 +57,7 @@ python evals/run_evals.py
 python evals/run_evals.py --filter prompt_injection
 ```
 
-**Results:** `evals/results/latest.json`
+**Results:** `evals/results/latest.json` — or open **Admin → Evals** in the app (`/admin/evals`).
 
 Pass threshold: **85%** of scenarios.
 
@@ -125,7 +125,16 @@ docker-compose --profile evals run --rm --entrypoint python evals /app/evals/run
 
 ---
 
-## View results
+## Web UI
+
+After running evals, open the frontend:
+
+- Local Docker: http://localhost:5173/admin/evals
+- VPS: https://hr.xpotify.cc/admin/evals
+
+The page reads `latest.json` and `deepeval-latest.json` via `GET /api/evals/results`. The backend mounts `evals/results/` (configurable with `EVALS_RESULTS_DIR`).
+
+---
 
 **Terminal** — `./scripts/run-evals-docker.sh` prints a PASS/FAIL summary.
 

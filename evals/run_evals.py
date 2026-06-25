@@ -17,11 +17,12 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "backend"))
 
 from agent.onboarding_agent import run_agent  # noqa: E402
+from shared.eval_results import golden_report_path, results_dir
 from shared.config import DEFAULT_EMPLOYEE_ID  # noqa: E402
 from shared.tasks import list_onboarding_tasks, reset_employee_data  # noqa: E402
 
 EVALS_DIR = Path(__file__).parent
-RESULTS_DIR = EVALS_DIR / "results"
+RESULTS_DIR = results_dir()
 
 
 def load_scenarios() -> list[dict]:
@@ -118,7 +119,6 @@ def main() -> int:
             print(f"ERROR: No scenarios matched filter '{args.filter}'")
             return 1
         print(f"Running {len(scenarios)} scenario(s) matching '{args.filter}'")
-    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
     results = []
     for scenario in scenarios:
@@ -161,7 +161,7 @@ def main() -> int:
         "results": results,
     }
 
-    report_path = RESULTS_DIR / "latest.json"
+    report_path = golden_report_path()
     with open(report_path, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2)
 

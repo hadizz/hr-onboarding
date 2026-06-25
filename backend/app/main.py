@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 from agent.onboarding_agent import run_agent, stream_agent
 from agent.security import InputValidationError, validate_message_length
 from shared.config import DEFAULT_EMPLOYEE_ID
+from shared.eval_results import load_eval_reports
 from shared.tasks import complete_task, get_onboarding_status, list_checkins, reset_employee_data
 
 
@@ -125,6 +126,11 @@ def reset_onboarding(employee_id: str):
 @app.get("/api/admin/checkins")
 def admin_checkins(employee_id: str | None = None):
     return {"checkins": list_checkins(employee_id)}
+
+
+@app.get("/api/evals/results")
+def eval_results():
+    return load_eval_reports()
 
 
 @app.get("/api/employee/demo")

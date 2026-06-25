@@ -236,6 +236,12 @@ export default function ChatPage() {
             >
               Admin · Check-ins
             </Link>
+            <Link
+              to="/admin/evals"
+              className="text-sm text-slate-500 hover:text-indigo-600"
+            >
+              Admin · Evals
+            </Link>
             {employee && (
               <div className="text-right text-sm">
                 <p className="font-medium">{employee.name}</p>

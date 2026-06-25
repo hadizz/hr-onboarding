@@ -46,6 +46,45 @@ export interface Checkin {
   scheduled_at: string;
 }
 
+export interface EvalScenarioResult {
+  id: string;
+  input: string;
+  passed?: boolean;
+  error?: string;
+  checks?: Record<string, boolean>;
+  metrics?: { name: string; score: number | null; passed: boolean; reason?: string }[];
+  response_preview?: string;
+  tool_calls?: string[];
+}
+
+export interface EvalReport {
+  timestamp?: string;
+  total: number;
+  passed: number;
+  failed: number;
+  pass_rate_percent: number;
+  framework?: string;
+  results: EvalScenarioResult[];
+}
+
+export interface EvalSuiteReport {
+  available: boolean;
+  path: string;
+  report: EvalReport | null;
+}
+
+export interface EvalReportBundle {
+  results_dir: string;
+  golden: EvalSuiteReport;
+  deepeval: EvalSuiteReport;
+}
+
+export async function fetchEvalResults(): Promise<EvalReportBundle> {
+  const res = await fetch(`${API_BASE}/api/evals/results`);
+  if (!res.ok) throw new Error('Failed to fetch eval results');
+  return res.json();
+}
+
 export async function fetchDemoEmployee(): Promise<DemoEmployee> {
   const res = await fetch(`${API_BASE}/api/employee/demo`);
   return res.json();

@@ -9,5 +9,6 @@ dist/
 .DS_Store
 *.db
 chroma/
-evals/results/
+evals/results/*
+!evals/results/.gitkeep
 .notes
