@@ -17,7 +17,7 @@ New hires ask the same 50 HR questions. HR teams manually track onboarding tasks
 | Django + LlamaIndex RAG API | FastAPI + LangGraph agent |
 | Passive document Q&A | Multi-tool autonomous agent |
 | Streaming chat only | Chat + task tracking + check-ins |
-| No evals | 17-scenario automated eval suite |
+| No evals | 28-scenario automated eval suite |
 | Backend only | Python + React full stack |
 | — | Custom MCP server for HR tools |
 
@@ -53,7 +53,7 @@ flowchart LR
 - **Custom MCP server** exposing the same HR tools for Cursor/Claude integration
 - **Chroma RAG** over seed HR documents with source citations
 - **React UI** — streaming chat, citation chips, tool-call indicators, onboarding progress sidebar
-- **Eval harness** — 17 golden scenarios testing retrieval, tool use, answer quality, and prompt-injection resistance
+- **Eval harness** — 28 golden scenarios testing retrieval, tool use, answer quality, and prompt-injection resistance
 - **Prompt-injection defenses** — input sandboxing, output guardrails, write-tool blocking, server-side tool validation
 
 ## Security
@@ -125,7 +125,7 @@ Uses the same backend image and Postgres as the app. Results land on your machin
 ```bash
 # Make sure .env has OPENAI_API_KEY, then:
 
-# All 17 scenarios (~3–5 min)
+# All 28 scenarios (~5–8 min)
 ./scripts/run-evals-docker.sh
 
 # Injection scenarios only (~1 min)
@@ -227,7 +227,7 @@ DEEPEVAL_FILTER=prompt_injection deepeval test run evals/test_deepeval.py
 
 Optional env vars: `DEEPEVAL_THRESHOLD` (default `0.7`), `DEEPEVAL_MODEL` (default `gpt-4o-mini`).
 
-### Eval Scenarios (17)
+### Eval Scenarios (28)
 
 | Scenario | Tests |
 |---|---|
@@ -243,11 +243,22 @@ Optional env vars: `DEEPEVAL_THRESHOLD` (default `0.7`), `DEEPEVAL_MODEL` (defau
 | list_tasks | Task listing tool |
 | code_of_conduct | Harassment policy |
 | parental_leave | 16 weeks leave |
+| pension_match | 4% employer pension match |
+| secondary_parental_leave | 8 weeks secondary caregiver leave |
+| remote_days_limit | 3 remote days per week |
+| headquarters_location | Helsinki HQ |
+| it_helpdesk | IT support contact |
+| github_access | Developer GitHub onboarding |
+| disk_encryption_deadline | 24-hour encryption requirement |
+| remote_policy_and_first_week | Research + workflow in one question |
+| premium_health_plan | Premium plan dental coverage |
+| onboarding_buddy | Day 1 buddy meeting |
 | prompt_injection_fixed_response | Blocks canned "service down" hijack |
 | prompt_injection_hacker_down_message | Blocks hacker + "sorry we are down" variant |
 | prompt_injection_ignore_instructions | Blocks role-override attacks |
 | prompt_injection_reveal_prompt | Blocks system-prompt exfiltration |
 | prompt_injection_task_spam | Blocks mass task creation via injection |
+| prompt_injection_mixed_pto | Answers PTO despite injection suffix |
 
 ## 2-Minute Demo Script (Interview)
 
@@ -307,7 +318,7 @@ Connect the repo and set `OPENAI_API_KEY`. Use `backend/Dockerfile` for the API 
 
 ## CV Bullet
 
-> **OnboardAI** — Autonomous HR onboarding agent (Python, LangGraph, MCP, React). Multi-tool agent that answers policy questions with citations, generates 30-day onboarding plans, and tracks task completion. Includes automated eval suite (17 scenarios, golden + DeepEval injection scoring). Evolution of production RAG system deployed at hr.433-cloud.com.
+> **OnboardAI** — Autonomous HR onboarding agent (Python, LangGraph, MCP, React). Multi-tool agent that answers policy questions with citations, generates 30-day onboarding plans, and tracks task completion. Includes automated eval suite (28 scenarios, golden + DeepEval injection scoring). Evolution of production RAG system deployed at hr.433-cloud.com.
 
 ## License
 

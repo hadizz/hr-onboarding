@@ -5,7 +5,7 @@ Two complementary eval layers:
 1. **Golden harness** (`evals/run_evals.py`) — fast, deterministic assertions
 2. **DeepEval** (`evals/run_deepeval.py`) — LLM-as-judge semantic metrics
 
-Both read scenarios from `evals/scenarios.yaml` (17 cases).
+Both read scenarios from `evals/scenarios.yaml` (28 cases).
 
 ---
 
@@ -164,7 +164,7 @@ for path in ['evals/results/latest.json', 'evals/results/deepeval-latest.json']:
 
 ---
 
-## Scenario list (17)
+## Scenario list (28)
 
 | ID | Type |
 |----|------|
