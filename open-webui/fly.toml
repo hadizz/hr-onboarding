@@ -1,0 +1,37 @@
+app = "hr-onboarding-webui"
+primary_region = "arn"
+
+[build]
+  image = "ghcr.io/open-webui/open-webui:main"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    grace_period = "60s"
+    interval = "30s"
+    method = "GET"
+    path = "/health"
+    timeout = "10s"
+
+[[vm]]
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[mounts]
+  source = "open_webui_data"
+  destination = "/app/backend/data"
+
+[env]
+  ENABLE_OLLAMA_API = "false"
+  ENABLE_OPENAI_API = "true"
+  OPENAI_API_BASE_URL = "https://hr-onboarding.fly.dev/v1"
+  OPENAI_API_KEY = "onboardai"
+  WEBUI_NAME = "OnboardAI"
+  ENABLE_SIGNUP = "false"
+  ENABLE_PERSISTENT_CONFIG = "false"

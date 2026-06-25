@@ -37,3 +37,27 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    ports:
+      - "3000:8080"
+    environment:
+      ENABLE_OLLAMA_API: "false"
+      ENABLE_OPENAI_API: "true"
+      OPENAI_API_BASE_URL: "http://backend:8000/v1"
+      OPENAI_API_KEY: "${ONBOARDAI_API_KEY:-onboardai}"
+      WEBUI_NAME: "OnboardAI"
+      ENABLE_SIGNUP: "false"
+      ENABLE_PERSISTENT_CONFIG: "false"
+      WEBUI_SECRET_KEY: "${WEBUI_SECRET_KEY:-dev-secret}"
+      WEBUI_ADMIN_EMAIL: "${WEBUI_ADMIN_EMAIL:-admin@example.com}"
+      WEBUI_ADMIN_PASSWORD: "${WEBUI_ADMIN_PASSWORD:-admin}"
+    volumes:
+      - open-webui-data:/app/backend/data
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  open-webui-data:
