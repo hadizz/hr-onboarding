@@ -6,6 +6,10 @@ from typing import Any
 from shared.db import _now_iso, get_connection, init_db
 
 VALID_CATEGORIES = {"HR", "IT", "Team"}
+MIN_DUE_DAY = 1
+MAX_DUE_DAY = 90
+MAX_TITLE_LENGTH = 200
+MAX_TOPIC_LENGTH = 500
 
 
 def ensure_db() -> None:
@@ -19,6 +23,14 @@ def create_onboarding_task(
     category: str,
 ) -> dict[str, Any]:
     ensure_db()
+    title = title.strip()
+    if not title:
+        raise ValueError("Task title cannot be empty")
+    if len(title) > MAX_TITLE_LENGTH:
+        raise ValueError(f"Task title too long (max {MAX_TITLE_LENGTH} chars)")
+    if not MIN_DUE_DAY <= due_day <= MAX_DUE_DAY:
+        raise ValueError(f"due_day must be between {MIN_DUE_DAY} and {MAX_DUE_DAY}")
+
     category = category.strip().title()
     if category not in VALID_CATEGORIES:
         category = "Team"
@@ -31,7 +43,7 @@ def create_onboarding_task(
                 VALUES (%s, %s, %s, %s, 'pending', %s)
                 RETURNING id
                 """,
-                (employee_id, title.strip(), due_day, category, _now_iso()),
+                (employee_id, title, due_day, category, _now_iso()),
             )
             row = cur.fetchone()
             conn.commit()
@@ -40,7 +52,7 @@ def create_onboarding_task(
     return {
         "id": task_id,
         "employee_id": employee_id,
-        "title": title.strip(),
+        "title": title,
         "due_day": due_day,
         "category": category,
         "status": "pending",
@@ -127,6 +139,14 @@ def list_checkins(employee_id: str | None = None) -> list[dict[str, Any]]:
 
 def schedule_checkin(employee_id: str, day: int, topic: str) -> dict[str, Any]:
     ensure_db()
+    topic = topic.strip()
+    if not topic:
+        raise ValueError("Check-in topic cannot be empty")
+    if len(topic) > MAX_TOPIC_LENGTH:
+        raise ValueError(f"Check-in topic too long (max {MAX_TOPIC_LENGTH} chars)")
+    if not MIN_DUE_DAY <= day <= MAX_DUE_DAY:
+        raise ValueError(f"Check-in day must be between {MIN_DUE_DAY} and {MAX_DUE_DAY}")
+
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -135,7 +155,7 @@ def schedule_checkin(employee_id: str, day: int, topic: str) -> dict[str, Any]:
                 VALUES (%s, %s, %s, %s)
                 RETURNING id
                 """,
-                (employee_id, day, topic.strip(), _now_iso()),
+                (employee_id, day, topic, _now_iso()),
             )
             row = cur.fetchone()
             conn.commit()
@@ -145,8 +165,8 @@ def schedule_checkin(employee_id: str, day: int, topic: str) -> dict[str, Any]:
         "id": checkin_id,
         "employee_id": employee_id,
         "day": day,
-        "topic": topic.strip(),
-        "message": f"Check-in scheduled for day {day}: {topic.strip()}",
+        "topic": topic,
+        "message": f"Check-in scheduled for day {day}: {topic}",
     }
 
 

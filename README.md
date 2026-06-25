@@ -17,7 +17,7 @@ New hires ask the same 50 HR questions. HR teams manually track onboarding tasks
 | Django + LlamaIndex RAG API | FastAPI + LangGraph agent |
 | Passive document Q&A | Multi-tool autonomous agent |
 | Streaming chat only | Chat + task tracking + check-ins |
-| No evals | 12-scenario automated eval suite |
+| No evals | 16-scenario automated eval suite |
 | Backend only | Python + React full stack |
 | — | Custom MCP server for HR tools |
 
@@ -53,7 +53,23 @@ flowchart LR
 - **Custom MCP server** exposing the same HR tools for Cursor/Claude integration
 - **Chroma RAG** over seed HR documents with source citations
 - **React UI** — streaming chat, citation chips, tool-call indicators, onboarding progress sidebar
-- **Eval harness** — 12 golden scenarios testing retrieval, tool use, and answer quality
+- **Eval harness** — 16 golden scenarios testing retrieval, tool use, answer quality, and prompt-injection resistance
+- **Prompt-injection defenses** — input sandboxing, output guardrails, write-tool blocking, server-side tool validation
+
+## Security
+
+OnboardAI uses layered defenses against prompt injection (see `.notes/SECURITY.md` for full details):
+
+| Layer | What it does |
+|---|---|
+| Input wrapping | User messages sandboxed in `<user_input>` tags |
+| Injection scan | Regex patterns flag override attempts in message + history |
+| Security prompts | Anti-injection rules on every agent system prompt |
+| Output guardrail | Blocks hijacked canned responses and prompt leaks |
+| Tool authorization | Write tools blocked when injection suspected; max 5 tasks/message |
+| Server validation | Task title/topic length, due-day range enforced in Python |
+
+Run injection evals: `python evals/run_evals.py` (scenarios `prompt_injection_*`).
 
 ## Quick Start
 
@@ -107,7 +123,7 @@ python evals/run_evals.py
 
 Results are saved to `evals/results/latest.json`.
 
-### Eval Scenarios (12)
+### Eval Scenarios (16)
 
 | Scenario | Tests |
 |---|---|
@@ -123,6 +139,10 @@ Results are saved to `evals/results/latest.json`.
 | list_tasks | Task listing tool |
 | code_of_conduct | Harassment policy |
 | parental_leave | 16 weeks leave |
+| prompt_injection_fixed_response | Blocks canned "service down" hijack |
+| prompt_injection_ignore_instructions | Blocks role-override attacks |
+| prompt_injection_reveal_prompt | Blocks system-prompt exfiltration |
+| prompt_injection_task_spam | Blocks mass task creation via injection |
 
 ## 2-Minute Demo Script (Interview)
 
@@ -154,6 +174,17 @@ hr-onboarding/
 - [ ] LLM-as-judge for faithfulness scoring in CI
 - [ ] OpenTelemetry tracing for agent observability
 
+### Future deployment hardening
+
+Required before exposing a public production instance:
+
+- [ ] **Authentication** — bind `employee_id` to logged-in user (JWT/session); reject cross-tenant access
+- [ ] **CORS lockdown** — restrict `allow_origins` to the frontend domain (replace `*`)
+- [ ] **Admin route protection** — require API key or admin role on `/api/admin/*` and `/api/onboarding/{id}/reset`
+- [ ] **Rate limiting** — per-IP and per-user limits on `/api/chat` (e.g. `slowapi` or reverse-proxy rules)
+- [ ] **Edge access control** — Cloudflare Access, VPN, or IP allowlist for demo/staging deployments
+- [ ] **LLM injection classifier** — secondary model call to flag adversarial input before agent execution
+
 ## Deploy
 
 ### Fly.io (backend)
@@ -170,7 +201,7 @@ Connect the repo and set `OPENAI_API_KEY`. Use `backend/Dockerfile` for the API 
 
 ## CV Bullet
 
-> **OnboardAI** — Autonomous HR onboarding agent (Python, LangGraph, MCP, React). Multi-tool agent that answers policy questions with citations, generates 30-day onboarding plans, and tracks task completion. Includes automated eval suite (12 scenarios, faithfulness + tool-use scoring). Evolution of production RAG system deployed at hr.433-cloud.com.
+> **OnboardAI** — Autonomous HR onboarding agent (Python, LangGraph, MCP, React). Multi-tool agent that answers policy questions with citations, generates 30-day onboarding plans, and tracks task completion. Includes automated eval suite (16 scenarios, faithfulness + tool-use + injection scoring). Evolution of production RAG system deployed at hr.433-cloud.com.
 
 ## License
 

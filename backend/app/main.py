@@ -11,6 +11,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from agent.onboarding_agent import run_agent, stream_agent
+from agent.security import InputValidationError, validate_message_length
 from shared.config import DEFAULT_EMPLOYEE_ID
 from shared.tasks import complete_task, get_onboarding_status, list_checkins, reset_employee_data
 
@@ -53,6 +54,13 @@ class CompleteTaskRequest(BaseModel):
     employee_id: str = DEFAULT_EMPLOYEE_ID
 
 
+def _validate_chat_request(request: ChatRequest) -> list[dict]:
+    validate_message_length(request.message)
+    for msg in request.history:
+        validate_message_length(msg.content)
+    return [m.model_dump() for m in request.history]
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
@@ -61,16 +69,21 @@ def health():
 @app.post("/api/chat")
 def chat(request: ChatRequest):
     try:
-        history = [m.model_dump() for m in request.history]
+        history = _validate_chat_request(request)
         result = run_agent(request.message, request.employee_id, history)
         return result
+    except InputValidationError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except ValueError as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/chat/stream")
 async def chat_stream(request: ChatRequest):
-    history = [m.model_dump() for m in request.history]
+    try:
+        history = _validate_chat_request(request)
+    except InputValidationError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     async def event_generator():
         try:

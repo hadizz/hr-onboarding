@@ -57,6 +57,9 @@ def run_scenario(scenario: dict) -> dict:
     if "contains" in expect:
         checks["contains"] = check_contains(response, expect["contains"])
 
+    if "not_contains" in expect:
+        checks["not_contains"] = not check_contains(response, expect["not_contains"])
+
     if "tools_called" in expect:
         checks["tools_called"] = check_tools_called(tool_calls, expect["tools_called"])
 
