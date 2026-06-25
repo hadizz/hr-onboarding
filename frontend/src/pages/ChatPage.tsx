@@ -8,6 +8,7 @@ import {
   streamChat,
 } from '../api';
 import type { AgentEvent, ChatMessage, DemoEmployee, OnboardingStatus } from '../api';
+import ChatMarkdown from '../components/ChatMarkdown';
 
 const CATEGORY_COLORS: Record<string, string> = {
   HR: 'bg-purple-100 text-purple-800',
@@ -101,7 +102,7 @@ function StreamingText({ text, active }: { text: string; active: boolean }) {
     return () => clearTimeout(timer);
   }, [text, displayed, active]);
 
-  return <p className="whitespace-pre-wrap">{displayed}</p>;
+  return <ChatMarkdown content={displayed} />;
 }
 
 export default function ChatPage() {
