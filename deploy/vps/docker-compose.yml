@@ -62,6 +62,9 @@ services:
       ENABLE_PERSISTENT_CONFIG: "false"
     volumes:
       - open_webui_data:/app/backend/data
+      - ../../open-webui/static/custom.css:/app/build/static/custom.css:ro
+      - ../../open-webui/static/loader.js:/app/build/static/loader.js:ro
+      - ../../open-webui/static/onboarding-sidebar.js:/app/build/static/onboarding-sidebar.js:ro
     depends_on:
       backend:
         condition: service_healthy

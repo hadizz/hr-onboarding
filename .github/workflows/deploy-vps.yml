@@ -8,6 +8,7 @@ on:
       - 'frontend/**'
       - 'shared/**'
       - 'seed-data/**'
+      - 'open-webui/**'
       - 'deploy/vps/**'
       - 'deploy/dns/**'
   workflow_dispatch:

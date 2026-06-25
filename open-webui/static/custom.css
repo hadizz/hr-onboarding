@@ -1,0 +1,210 @@
+/* OnboardAI onboarding task sidebar for Open WebUI */
+html.onboardai-tasks-enabled body {
+  padding-right: 340px !important;
+}
+
+#onboardai-sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 320px;
+  height: 100vh;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-left: 1px solid #e2e8f0;
+  box-shadow: -4px 0 24px rgba(15, 23, 42, 0.06);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: #0f172a;
+}
+
+html.dark #onboardai-sidebar {
+  background: #171717;
+  border-left-color: #2a2a2a;
+  color: #f1f5f9;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.35);
+}
+
+#onboardai-sidebar .oa-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+html.dark #onboardai-sidebar .oa-header {
+  border-bottom-color: #2a2a2a;
+}
+
+#onboardai-sidebar .oa-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+#onboardai-sidebar .oa-subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+html.dark #onboardai-sidebar .oa-subtitle {
+  color: #94a3b8;
+}
+
+#onboardai-sidebar .oa-progress-wrap {
+  padding: 1rem 1.25rem 0.5rem;
+}
+
+#onboardai-sidebar .oa-progress-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  margin-bottom: 0.35rem;
+  color: #475569;
+}
+
+html.dark #onboardai-sidebar .oa-progress-row {
+  color: #cbd5e1;
+}
+
+#onboardai-sidebar .oa-progress-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  overflow: hidden;
+}
+
+html.dark #onboardai-sidebar .oa-progress-bar {
+  background: #262626;
+}
+
+#onboardai-sidebar .oa-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: #4f46e5;
+  transition: width 0.25s ease;
+}
+
+#onboardai-sidebar .oa-task-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem 1rem 1rem;
+  list-style: none;
+  margin: 0;
+}
+
+#onboardai-sidebar .oa-task {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid #f1f5f9;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+}
+
+html.dark #onboardai-sidebar .oa-task {
+  background: #1f1f1f;
+  border-color: #2f2f2f;
+}
+
+#onboardai-sidebar .oa-task input[type='checkbox'] {
+  margin-top: 0.2rem;
+  accent-color: #4f46e5;
+  cursor: pointer;
+}
+
+#onboardai-sidebar .oa-task-title {
+  font-size: 0.85rem;
+  line-height: 1.35;
+  margin: 0;
+}
+
+#onboardai-sidebar .oa-task.done .oa-task-title {
+  text-decoration: line-through;
+  color: #94a3b8;
+}
+
+#onboardai-sidebar .oa-task-meta {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+  align-items: center;
+}
+
+#onboardai-sidebar .oa-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.1rem 0.45rem;
+  border-radius: 0.35rem;
+}
+
+#onboardai-sidebar .oa-badge.hr {
+  background: #f3e8ff;
+  color: #6b21a8;
+}
+
+#onboardai-sidebar .oa-badge.it {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+#onboardai-sidebar .oa-badge.team {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+html.dark #onboardai-sidebar .oa-badge.hr {
+  background: #3b0764;
+  color: #e9d5ff;
+}
+
+html.dark #onboardai-sidebar .oa-badge.it {
+  background: #1e3a8a;
+  color: #bfdbfe;
+}
+
+html.dark #onboardai-sidebar .oa-badge.team {
+  background: #14532d;
+  color: #bbf7d0;
+}
+
+#onboardai-sidebar .oa-due {
+  font-size: 0.65rem;
+  color: #94a3b8;
+}
+
+#onboardai-sidebar .oa-empty {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-style: italic;
+  padding: 0.5rem;
+}
+
+#onboardai-sidebar .oa-footer {
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid #e2e8f0;
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+html.dark #onboardai-sidebar .oa-footer {
+  border-top-color: #2a2a2a;
+}
+
+@media (max-width: 1100px) {
+  html.onboardai-tasks-enabled body {
+    padding-right: 0 !important;
+  }
+
+  #onboardai-sidebar {
+    width: 100%;
+    height: auto;
+    max-height: 40vh;
+    top: auto;
+    bottom: 0;
+    border-left: none;
+    border-top: 1px solid #e2e8f0;
+  }
+}
