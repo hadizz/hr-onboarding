@@ -75,6 +75,35 @@ function ToolCallBadge({ name }: { name: string }) {
   );
 }
 
+function ThinkingBubble() {
+  return (
+    <div className="flex justify-start">
+      <div className="rounded-2xl bg-slate-100 px-4 py-3 text-sm text-slate-500">
+        <span className="italic">Thinking</span>
+        <span className="inline-flex w-6 animate-pulse">...</span>
+      </div>
+    </div>
+  );
+}
+
+function StreamingText({ text, active }: { text: string; active: boolean }) {
+  const [displayed, setDisplayed] = useState('');
+
+  useEffect(() => {
+    if (!active) {
+      setDisplayed(text);
+      return;
+    }
+    if (displayed.length >= text.length) return;
+    const timer = setTimeout(() => {
+      setDisplayed(text.slice(0, displayed.length + 2));
+    }, 16);
+    return () => clearTimeout(timer);
+  }, [text, displayed, active]);
+
+  return <p className="whitespace-pre-wrap">{displayed}</p>;
+}
+
 export default function ChatPage() {
   const [employee, setEmployee] = useState<DemoEmployee | null>(null);
   const [status, setStatus] = useState<OnboardingStatus | null>(null);
@@ -241,7 +270,13 @@ export default function ChatPage() {
               </div>
             )}
 
-            {messages.map((msg, i) => (
+            {messages.map((msg, i) => {
+              if (msg.role === 'assistant' && !msg.content && loading) return null;
+
+              const isStreaming =
+                loading && i === messages.length - 1 && msg.role === 'assistant';
+
+              return (
               <div
                 key={i}
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -253,7 +288,11 @@ export default function ChatPage() {
                       : 'bg-slate-100 text-slate-800'
                   }`}
                 >
-                  <p className="whitespace-pre-wrap">{msg.content}</p>
+                  {msg.role === 'assistant' ? (
+                    <StreamingText text={msg.content} active={isStreaming} />
+                  ) : (
+                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                  )}
                   {msg.toolCalls && msg.toolCalls.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1">
                       {msg.toolCalls.map((t) => (
@@ -275,15 +314,14 @@ export default function ChatPage() {
                   )}
                 </div>
               </div>
-            ))}
+              );
+            })}
 
-            {loading && messages[messages.length - 1]?.role !== 'assistant' && (
-              <div className="flex justify-start">
-                <div className="rounded-2xl bg-slate-100 px-4 py-3 text-sm text-slate-500">
-                  Waiting for agents...
-                </div>
-              </div>
-            )}
+            {loading &&
+              (messages.length === 0 ||
+                messages[messages.length - 1]?.role === 'user' ||
+                (messages[messages.length - 1]?.role === 'assistant' &&
+                  !messages[messages.length - 1]?.content)) && <ThinkingBubble />}
             <div ref={chatEndRef} />
           </div>
 
