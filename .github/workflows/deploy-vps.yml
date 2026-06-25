@@ -30,6 +30,7 @@ jobs:
           username: ${{ secrets.VPS_SSH_USER }}
           key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
           script: |
+            echo "==== LOGGING IN TO VPS ===="
             if [ ! -d /opt/hr-onboarding/.git ]; then
               git clone https://github.com/hadizz/hr-onboarding.git /opt/hr-onboarding
             fi
@@ -40,6 +41,7 @@ jobs:
             if [ -f /root/env.txt ] && [ ! -f .env ]; then
               cp /root/env.txt .env
             fi
+            echo "==== RUNNING DEPLOY SCRIPT ===="
             chmod +x deploy/vps/deploy.sh deploy/vps/bootstrap-vps.sh
             bash deploy/vps/deploy.sh ${{ github.event.inputs.service || 'all' }}
-
+            echo "==== DEPLOY COMPLETED ===="
