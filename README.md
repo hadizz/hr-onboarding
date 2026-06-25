@@ -58,10 +58,11 @@ flowchart LR
 
 ## Security
 
-OnboardAI uses layered defenses against prompt injection (see `.notes/SECURITY.md` for full details):
+OnboardAI uses layered defenses against prompt injection — full write-up in [docs/SECURITY.md](docs/SECURITY.md).
 
 | Layer | What it does |
 |---|---|
+| **Pure-attack early exit** | Skips agent graph when message is injection-only (no HR question) |
 | Input wrapping | User messages sandboxed in `<user_input>` tags |
 | Injection scan | Regex patterns flag override attempts in message + history |
 | Security prompts | Anti-injection rules on every agent system prompt |
@@ -69,7 +70,7 @@ OnboardAI uses layered defenses against prompt injection (see `.notes/SECURITY.m
 | Tool authorization | Write tools blocked when injection suspected; max 5 tasks/message |
 | Server validation | Task title/topic length, due-day range enforced in Python |
 
-Run injection evals: `./scripts/run-evals-docker.sh --filter prompt_injection` (see [Eval Suite](#eval-suite)).
+Run injection evals: `./scripts/run-evals-docker.sh --filter prompt_injection` — see [docs/EVALS.md](docs/EVALS.md).
 
 ## Quick Start
 
@@ -84,7 +85,7 @@ Run injection evals: `./scripts/run-evals-docker.sh --filter prompt_injection` (
 cp .env.example .env
 # Edit .env and set OPENAI_API_KEY
 
-docker compose up --build
+docker-compose up --build
 ```
 
 - Frontend: http://localhost:5173
@@ -114,6 +115,8 @@ python mcp-server/server.py
 ```
 
 ## Eval Suite
+
+> Full documentation: [docs/EVALS.md](docs/EVALS.md)
 
 ### Docker (recommended)
 
@@ -251,7 +254,7 @@ Optional env vars: `DEEPEVAL_THRESHOLD` (default `0.7`), `DEEPEVAL_MODEL` (defau
 1. Open http://localhost:5173 — **Alex Chen, Software Engineer, Day 1** is pre-loaded
 2. Ask: *"What's the remote work policy?"* → agent cites `employee-handbook.md`
 3. Ask: *"I just started, what should I do this week?"* → agent creates 4–5 tasks, progress bar updates
-4. Show eval output: `python evals/run_evals.py` — report pass rate
+4. Show eval output: `./scripts/run-evals-docker.sh --filter prompt_injection`
 5. Close: *"v1 was RAG Q&A I deployed for a client. v2 adds autonomous workflow execution."*
 
 ## Project Structure
@@ -259,9 +262,10 @@ Optional env vars: `DEEPEVAL_THRESHOLD` (default `0.7`), `DEEPEVAL_MODEL` (defau
 ```
 hr-onboarding/
 ├── backend/           # FastAPI + LangGraph agent
+├── docs/              # Security, evals, multi-agent, run guides
 ├── mcp-server/        # Python MCP HR tools
 ├── frontend/          # React + Vite + Tailwind
-├── evals/             # Golden scenarios + runner
+├── evals/             # Golden scenarios + DeepEval runners
 ├── shared/            # RAG, tasks, DB (used by backend + MCP)
 ├── seed-data/         # HR handbook, benefits, IT docs
 └── docker-compose.yml
@@ -273,7 +277,7 @@ hr-onboarding/
 - [ ] Real Slack / HRIS MCP integrations
 - [ ] OAuth + multi-org tenancy
 - [ ] PDF upload pipeline for custom handbooks
-- [ ] LLM-as-judge for faithfulness scoring in CI
+- [x] DeepEval LLM-as-judge for faithfulness and injection scoring
 - [ ] OpenTelemetry tracing for agent observability
 
 ### Future deployment hardening
@@ -303,7 +307,7 @@ Connect the repo and set `OPENAI_API_KEY`. Use `backend/Dockerfile` for the API 
 
 ## CV Bullet
 
-> **OnboardAI** — Autonomous HR onboarding agent (Python, LangGraph, MCP, React). Multi-tool agent that answers policy questions with citations, generates 30-day onboarding plans, and tracks task completion. Includes automated eval suite (16 scenarios, faithfulness + tool-use + injection scoring). Evolution of production RAG system deployed at hr.433-cloud.com.
+> **OnboardAI** — Autonomous HR onboarding agent (Python, LangGraph, MCP, React). Multi-tool agent that answers policy questions with citations, generates 30-day onboarding plans, and tracks task completion. Includes automated eval suite (17 scenarios, golden + DeepEval injection scoring). Evolution of production RAG system deployed at hr.433-cloud.com.
 
 ## License
 
