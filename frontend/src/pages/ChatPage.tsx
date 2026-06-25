@@ -21,6 +21,18 @@ const SUGGESTIONS = [
   'When do I need to enroll in health insurance?',
 ];
 
+function AgentBadge({ agent, detail }: { agent: string; detail?: string }) {
+  const label = agent.charAt(0).toUpperCase() + agent.slice(1);
+  return (
+    <span
+      title={detail}
+      className="inline-flex items-center rounded-full bg-violet-50 px-2 py-0.5 text-xs text-violet-800 border border-violet-200"
+    >
+      {label} agent
+    </span>
+  );
+}
+
 function ToolCallBadge({ name }: { name: string }) {
   const label = name.replace(/_tool$/, '').replace(/_/g, ' ');
   return (
@@ -70,6 +82,7 @@ export default function ChatPage() {
     let assistantContent = '';
     let citations: string[] = [];
     let toolCalls: string[] = [];
+    let agentEvents: { agent: string; status: string; detail: string }[] = [];
 
     try {
       await streamChat(message, employee.id, messages, (event, data) => {
@@ -79,9 +92,9 @@ export default function ChatPage() {
             const next = [...prev];
             const last = next[next.length - 1];
             if (last?.role === 'assistant') {
-              next[next.length - 1] = { ...last, content: assistantContent, citations, toolCalls };
+              next[next.length - 1] = { ...last, content: assistantContent, citations, toolCalls, agentEvents };
             } else {
-              next.push({ role: 'assistant', content: assistantContent, citations, toolCalls });
+              next.push({ role: 'assistant', content: assistantContent, citations, toolCalls, agentEvents });
             }
             return next;
           });
@@ -89,6 +102,9 @@ export default function ChatPage() {
         if (event === 'citations') citations = data as string[];
         if (event === 'tool_calls') {
           toolCalls = (data as { name: string }[]).map((t) => t.name);
+        }
+        if (event === 'agent_events') {
+          agentEvents = data as { agent: string; status: string; detail: string }[];
         }
         if (event === 'done') {
           assistantContent = data as string;
@@ -106,6 +122,7 @@ export default function ChatPage() {
           content: assistantContent,
           citations,
           toolCalls,
+          agentEvents,
         };
         if (idx >= 0) next[idx] = assistantMsg;
         else next.push(assistantMsg);
@@ -196,6 +213,13 @@ export default function ChatPage() {
                   }`}
                 >
                   <p className="whitespace-pre-wrap">{msg.content}</p>
+                  {msg.agentEvents && msg.agentEvents.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {msg.agentEvents.map((e) => (
+                        <AgentBadge key={e.agent} agent={e.agent} detail={e.detail} />
+                      ))}
+                    </div>
+                  )}
                   {msg.toolCalls && msg.toolCalls.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1">
                       {msg.toolCalls.map((t) => (
@@ -222,7 +246,7 @@ export default function ChatPage() {
             {loading && (
               <div className="flex justify-start">
                 <div className="rounded-2xl bg-slate-100 px-4 py-3 text-sm text-slate-500">
-                  Thinking...
+                  Agents working...
                 </div>
               </div>
             )}

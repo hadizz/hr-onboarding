@@ -5,6 +5,13 @@ export interface ChatMessage {
   content: string;
   citations?: string[];
   toolCalls?: string[];
+  agentEvents?: AgentEvent[];
+}
+
+export interface AgentEvent {
+  agent: string;
+  status: string;
+  detail: string;
 }
 
 export interface OnboardingTask {
