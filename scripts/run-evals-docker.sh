@@ -22,11 +22,11 @@ docker-compose up -d postgres
 
 if [[ "$MODE" == "deepeval" ]]; then
   echo "Running DeepEval in Docker..."
-  docker-compose --profile evals run --rm --entrypoint python evals /app/evals/run_deepeval.py "$@"
+  docker-compose --profile evals run --rm --build --entrypoint python evals /app/evals/run_deepeval.py "$@"
   RESULTS_FILE="evals/results/deepeval-latest.json"
 else
   echo "Running golden evals in Docker..."
-  docker-compose --profile evals run --rm evals "$@"
+  docker-compose --profile evals run --rm --build evals "$@"
   RESULTS_FILE="evals/results/latest.json"
 fi
 

@@ -103,6 +103,7 @@ services:
       EVALS_RESULTS_DIR: /app/evals/results
     volumes:
       - ../../evals:/app/evals
+      - ../../shared:/app/shared
       - hr_onboarding_data:/app/data
       - ../../seed-data:/app/seed-data:ro
     depends_on:

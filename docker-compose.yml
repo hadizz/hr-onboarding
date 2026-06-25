@@ -78,6 +78,7 @@ services:
       EVALS_RESULTS_DIR: /app/evals/results
     volumes:
       - ./evals:/app/evals
+      - ./shared:/app/shared
       - ./data:/app/data
       - ./seed-data:/app/seed-data
     depends_on:
