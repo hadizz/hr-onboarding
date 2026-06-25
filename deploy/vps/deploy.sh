@@ -30,11 +30,20 @@ case "${SERVICE}" in
     docker compose -f "${COMPOSE_FILE}" up -d --build frontend
     ;;
   evals)
-    docker compose -f "${COMPOSE_FILE}" --profile evals run --rm evals "${@:2}"
+    bash "${APP_DIR}/deploy/vps/run-evals.sh" "${@:2}"
     ;;
   *)
     docker compose -f "${COMPOSE_FILE}" up -d --build "${SERVICE}"
     ;;
 esac
+
+# After app deploy, refresh golden eval report for /admin/evals (non-blocking).
+if [[ "${SERVICE}" == "all" || "${SERVICE}" == "backend" ]]; then
+  if bash "${APP_DIR}/deploy/vps/run-evals.sh"; then
+    echo "==== Golden evals passed ===="
+  else
+    echo "==== WARNING: Golden evals below pass threshold (deploy succeeded) ===="
+  fi
+fi
 
 docker compose -f "${COMPOSE_FILE}" ps

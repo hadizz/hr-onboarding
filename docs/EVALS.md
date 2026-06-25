@@ -134,6 +134,8 @@ After running evals, open the frontend:
 
 The page reads `latest.json` and `deepeval-latest.json` via `GET /api/evals/results`. The backend mounts `evals/results/` (configurable with `EVALS_RESULTS_DIR`).
 
+**VPS:** Golden evals run automatically after each `all` or `backend` deploy (`deploy/vps/run-evals.sh`). Manual run: `bash deploy/vps/deploy.sh evals`.
+
 After `git pull`, rebuild: `docker-compose up -d --build backend frontend`
 
 ---

@@ -23,6 +23,7 @@ jobs:
   deploy:
     name: Deploy to Hetzner VPS
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
@@ -32,6 +33,7 @@ jobs:
           host: ${{ secrets.VPS_SSH_HOST }}
           username: ${{ secrets.VPS_SSH_USER }}
           key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          command_timeout: 45m
           script: |
             echo "==== LOGGING IN TO VPS ===="
             if [ ! -d /opt/hr-onboarding/.git ]; then
@@ -45,6 +47,6 @@ jobs:
               cp /root/env.txt .env
             fi
             echo "==== RUNNING DEPLOY SCRIPT ===="
-            chmod +x deploy/vps/deploy.sh deploy/vps/bootstrap-vps.sh
+            chmod +x deploy/vps/deploy.sh deploy/vps/bootstrap-vps.sh deploy/vps/run-evals.sh
             bash deploy/vps/deploy.sh ${{ github.event.inputs.service || 'all' }}
             echo "==== DEPLOY COMPLETED ===="
