@@ -10,5 +10,4 @@ CHROMA_PATH = DATA_DIR / "chroma"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-ONBOARDAI_API_KEY = os.getenv("ONBOARDAI_API_KEY", "")
 DEFAULT_EMPLOYEE_ID = "alex-chen"

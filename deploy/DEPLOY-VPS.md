@@ -13,22 +13,16 @@ Host **hr-onboarding** on the same Hetzner VPS as [Zanbeel](https://zanbeel.app)
 
 ## DNS (Cloudflare)
 
-Import [`deploy/dns/xpotify.cc.txt`](dns/xpotify.cc.txt) or run:
+Create **DNS only** (grey cloud / `proxied: false`) A records pointing to your VPS IP:
 
-```bash
-export CF_API_EMAIL=hadizareoriginal@gmail.com
-export CF_API_KEY=your-global-api-key   # Profile → API Tokens → Global API Key
-bash deploy/dns/apply-xpotify-dns.sh
-```
-
-Records must be **DNS only** (grey cloud / `proxied: false`) so Traefik can obtain Let's Encrypt certificates.
+- `hr-api.xpotify.cc`
+- `hr.xpotify.cc`
 
 Verify:
 
 ```bash
 dig +short hr-api.xpotify.cc
 dig +short hr.xpotify.cc
-# Both should return 65.109.205.51
 ```
 
 ---
@@ -64,9 +58,9 @@ bash /opt/hr-onboarding/deploy/vps/deploy.sh
 
 | Secret | Purpose |
 |--------|---------|
+| `VPS_SSH_HOST` | VPS IP or hostname |
+| `VPS_SSH_USER` | SSH user (e.g. `root`) |
 | `VPS_SSH_PRIVATE_KEY` | SSH private key (matches public key on VPS) |
-| `CF_API_EMAIL` | Cloudflare account email |
-| `CF_API_KEY` | Cloudflare Global API Key (for DNS workflow) |
 
 Workflow: [`.github/workflows/deploy-vps.yml`](../.github/workflows/deploy-vps.yml)
 

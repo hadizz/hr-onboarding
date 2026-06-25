@@ -13,11 +13,6 @@ if [[ ! -f .env ]]; then
   exit 1
 fi
 
-grep -q '^ONBOARDAI_API_KEY=' .env 2>/dev/null || echo 'ONBOARDAI_API_KEY=onboardai' >> .env
-grep -q '^WEBUI_SECRET_KEY=' .env 2>/dev/null || echo "WEBUI_SECRET_KEY=$(openssl rand -hex 32)" >> .env
-grep -q '^WEBUI_ADMIN_EMAIL=' .env 2>/dev/null || echo 'WEBUI_ADMIN_EMAIL=admin@example.com' >> .env
-grep -q '^WEBUI_ADMIN_PASSWORD=' .env 2>/dev/null || echo 'WEBUI_ADMIN_PASSWORD=change-me' >> .env
-
 docker network inspect zanbeel >/dev/null 2>&1 || docker network create zanbeel
 
 git fetch origin "${DEPLOY_BRANCH:-main}"
@@ -31,9 +26,6 @@ case "${SERVICE}" in
   backend)
     docker compose -f "${COMPOSE_FILE}" up -d --build backend
     ;;
-  open-webui|webui)
-    docker compose -f "${COMPOSE_FILE}" up -d --build backend open-webui
-    ;;
   frontend)
     docker compose -f "${COMPOSE_FILE}" up -d --build frontend
     ;;
@@ -43,9 +35,3 @@ case "${SERVICE}" in
 esac
 
 docker compose -f "${COMPOSE_FILE}" ps
-
-echo ""
-echo "URLs (after DNS propagates):"
-echo "  API:        https://hr-api.xpotify.cc/health"
-echo "  Open WebUI: https://hr.xpotify.cc"
-echo "  React UI:   https://hr-app.xpotify.cc"

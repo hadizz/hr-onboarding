@@ -24,5 +24,5 @@ fi
 
 docker network inspect zanbeel >/dev/null 2>&1 || docker network create zanbeel
 
-chmod +x "${APP_DIR}/deploy/vps/deploy.sh" "${APP_DIR}/deploy/dns/apply-xpotify-dns.sh"
+chmod +x "${APP_DIR}/deploy/vps/deploy.sh"
 bash "${APP_DIR}/deploy/vps/deploy.sh"

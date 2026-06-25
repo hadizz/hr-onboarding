@@ -1,14 +1,13 @@
 # VPS production stack — Traefik on shared `zanbeel` network (Hetzner 65.109.205.51)
 #
 # Domains:
-#   hr-api.xpotify.cc  → backend (FastAPI :8000, includes /v1 for Open WebUI)
-#   hr.xpotify.cc      → Open WebUI chat interface
-#   hr-app.xpotify.cc  → React frontend (legacy UI)
+#   hr-api.xpotify.cc  → backend (FastAPI :8000)
+#   hr.xpotify.cc      → React frontend
 #
 # Prerequisites on VPS:
 #   - Docker + Traefik already running (see /opt/zanbeel)
 #   - External network: docker network create zanbeel  (if missing)
-#   - /opt/hr-onboarding/.env with OPENAI_API_KEY (+ optional WEBUI_* vars)
+#   - /opt/hr-onboarding/.env with OPENAI_API_KEY
 
 name: hr-onboarding
 
@@ -25,8 +24,6 @@ services:
     restart: unless-stopped
     env_file:
       - ../../.env
-    environment:
-      ONBOARDAI_API_KEY: ${ONBOARDAI_API_KEY:-onboardai}
     volumes:
       - hr_onboarding_data:/app/data
       - ../../seed-data:/app/seed-data:ro
@@ -46,42 +43,6 @@ services:
       timeout: 10s
       retries: 3
 
-  open-webui:
-    build:
-      context: ../../open-webui
-      dockerfile: Dockerfile
-    image: hr-onboarding-webui:local
-    container_name: hr-onboarding-webui
-    restart: unless-stopped
-    env_file:
-      - ../../.env
-    environment:
-      ENABLE_OLLAMA_API: "false"
-      ENABLE_OPENAI_API: "true"
-      OPENAI_API_BASE_URL: https://hr-api.xpotify.cc/v1
-      OPENAI_API_KEY: ${ONBOARDAI_API_KEY:-onboardai}
-      WEBUI_NAME: OnboardAI
-      ENABLE_SIGNUP: "false"
-      ENABLE_PERSISTENT_CONFIG: "false"
-    volumes:
-      - open_webui_data:/app/backend/data
-      - ../../open-webui/static/custom.css:/app/build/static/custom.css:ro
-      - ../../open-webui/static/loader.js:/app/build/static/loader.js:ro
-      - ../../open-webui/static/onboarding-sidebar.js:/app/build/static/onboarding-sidebar.js:ro
-    depends_on:
-      backend:
-        condition: service_healthy
-    networks:
-      - zanbeel
-    labels:
-      - traefik.enable=true
-      - traefik.docker.network=zanbeel
-      - traefik.http.routers.hr-onboarding-webui.rule=Host(`hr.xpotify.cc`)
-      - traefik.http.routers.hr-onboarding-webui.entrypoints=websecure
-      - traefik.http.routers.hr-onboarding-webui.tls=true
-      - traefik.http.routers.hr-onboarding-webui.tls.certresolver=letsencrypt
-      - traefik.http.services.hr-onboarding-webui.loadbalancer.server.port=8080
-
   frontend:
     build:
       context: ../../frontend
@@ -98,7 +59,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=zanbeel
-      - traefik.http.routers.hr-onboarding-web.rule=Host(`hr-app.xpotify.cc`)
+      - traefik.http.routers.hr-onboarding-web.rule=Host(`hr.xpotify.cc`)
       - traefik.http.routers.hr-onboarding-web.entrypoints=websecure
       - traefik.http.routers.hr-onboarding-web.tls=true
       - traefik.http.routers.hr-onboarding-web.tls.certresolver=letsencrypt
@@ -106,4 +67,3 @@ services:
 
 volumes:
   hr_onboarding_data:
-  open_webui_data:
