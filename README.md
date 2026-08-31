@@ -260,6 +260,8 @@ Optional env vars: `DEEPEVAL_THRESHOLD` (default `0.7`), `DEEPEVAL_MODEL` (defau
 | prompt_injection_task_spam | Blocks mass task creation via injection |
 | prompt_injection_mixed_pto | Answers PTO despite injection suffix |
 
+**Baseline:** 22/28 golden scenarios pass (78.6%). All injection scenarios pass; 6 RAG/workflow cases need agent improvements — see [docs/EVALS.md](docs/EVALS.md#current-baseline-golden-harness).
+
 ## 2-Minute Demo Script (Interview)
 
 1. Open http://localhost:5173 — **Alex Chen, Software Engineer, Day 1** is pre-loaded
@@ -273,7 +275,7 @@ Optional env vars: `DEEPEVAL_THRESHOLD` (default `0.7`), `DEEPEVAL_MODEL` (defau
 ```
 hr-onboarding/
 ├── backend/           # FastAPI + LangGraph agent
-├── docs/              # Security, evals, multi-agent, run guides
+├── docs/              # Security, evals, deploy, multi-agent, run guides
 ├── mcp-server/        # Python MCP HR tools
 ├── frontend/          # React + Vite + Tailwind
 ├── evals/             # Golden scenarios + DeepEval runners
@@ -303,6 +305,20 @@ Required before exposing a public production instance:
 - [ ] **LLM injection classifier** — secondary model call to flag adversarial input before agent execution
 
 ## Deploy
+
+### VPS (production demo)
+
+Live at https://hr.xpotify.cc · API https://hr-api.xpotify.cc · Eval dashboard `/admin/evals`
+
+Pushes to `main` that touch `backend/`, `frontend/`, `evals/`, `shared/`, or `deploy/vps/` trigger GitHub Actions deploy to Hetzner. After each deploy, **golden evals run automatically** and populate the admin dashboard (results are gitignored, server-only).
+
+Full guide: [docs/DEPLOY-VPS.md](docs/DEPLOY-VPS.md)
+
+```bash
+# Manual on server
+bash /opt/hr-onboarding/deploy/vps/deploy.sh
+bash /opt/hr-onboarding/deploy/vps/deploy.sh evals   # evals only
+```
 
 ### Fly.io (backend)
 

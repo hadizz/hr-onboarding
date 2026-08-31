@@ -116,5 +116,6 @@ backend/agent/
 ## Related
 
 - [SECURITY.md](./SECURITY.md)
-- [EVALS.md](./EVALS.md)
+- [EVALS.md](./EVALS.md) — 22/28 golden baseline; all injection scenarios pass
+- [DEPLOY-VPS.md](./DEPLOY-VPS.md)
 - [RUN.md](./RUN.md)

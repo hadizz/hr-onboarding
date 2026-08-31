@@ -120,6 +120,10 @@ Pure attacks (injection only, no HR question) → **early exit**, zero tool call
 ./scripts/run-evals-docker.sh deepeval --filter prompt_injection
 ```
 
+**Current baseline (golden):** all **6** `prompt_injection_*` scenarios pass. Full suite is **22/28 (78.6%)** — remaining failures are RAG citation and workflow routing, not injection bypasses. See [EVALS.md](./EVALS.md#current-baseline-golden-harness).
+
+On VPS, golden evals run automatically after deploy; results appear at https://hr.xpotify.cc/admin/evals.
+
 See [EVALS.md](./EVALS.md) for full eval documentation.
 
 ---
@@ -140,4 +144,5 @@ See [EVALS.md](./EVALS.md) for full eval documentation.
 
 - [MULTI-AGENT.md](./MULTI-AGENT.md) — agent architecture + security gate
 - [EVALS.md](./EVALS.md) — golden + DeepEval harness
+- [DEPLOY-VPS.md](./DEPLOY-VPS.md) — production deploy + post-deploy injection evals
 - [RUN.md](./RUN.md) — local dev commands

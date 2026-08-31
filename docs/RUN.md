@@ -45,7 +45,7 @@ docker-compose up --build
 ./scripts/run-evals-docker.sh --filter prompt_injection
 ```
 
-Results: `evals/results/latest.json`
+Results: `evals/results/latest.json` — view in the app at `/admin/evals`.
 
 ### DeepEval (LLM-as-judge)
 
@@ -56,7 +56,7 @@ Results: `evals/results/latest.json`
 
 Results: `evals/results/deepeval-latest.json`
 
-See [EVALS.md](./EVALS.md) for full documentation.
+See [EVALS.md](./EVALS.md) for full documentation. Production eval dashboard: https://hr.xpotify.cc/admin/evals (populated automatically on VPS deploy — see [DEPLOY-VPS.md](./DEPLOY-VPS.md)).
 
 ---
 
@@ -76,4 +76,7 @@ See [SECURITY.md](./SECURITY.md).
 |---------|-----|
 | `OPENAI_API_KEY is required` | `export $(grep -v '^#' .env \| xargs)` |
 | `docker compose` not found | Use `docker-compose` (hyphen) |
+| `ModuleNotFoundError: shared.eval_results` | Use `./scripts/run-evals-docker.sh` (mounts `shared/` + `--build`) |
 | Eval import errors locally | Use `./scripts/run-evals-docker.sh` instead |
+| `/admin/evals` blank after `git pull` | `docker-compose up -d --build backend frontend` |
+| `/admin/evals` blank on VPS | Results are server-local — wait for post-deploy evals or `bash deploy/vps/deploy.sh evals` |
